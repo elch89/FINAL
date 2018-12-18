@@ -13,5 +13,6 @@ The media content of this app will be music videos, allowing users to:
 5. Play favorite music video and make their own playlist
 
 ## For viewing project log:
-
+[Project-log](https://github.com/elch89/FINAL/wiki/Project-Log)
 ## My wiki:
+  [wiki](https://github.com/elch89/FINAL/wiki)
