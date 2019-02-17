@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Earworm fix</string>
+
+    <string name="title_activity_feeds">feeds</string>
+    <string name="time_of_post">Time of post</string>
+    <string name="time_of_comment">Time of comment</string>
+    <string name="comment_feed">Nice song choice!</string>
+    <string name="user_id">User #1</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+</resources>
