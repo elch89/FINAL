@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,26 +6,44 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#ffffff"
 
-    tools:context=".Activities.FeedsActivity">
+    tools:context=".Activities.PlaylistActivity">
 
-    <RelativeLayout
-        android:id="@+id/fullscreen_content"
-        android:layout_below="@id/header"
+    <LinearLayout
+        android:id="@+id/fullscreen"
+        android:orientation="vertical"
+        android:layout_below="@id/header_playlist"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true">
-        <im.ene.toro.widget.Container
-            android:id="@+id/container"
+
+        <!--<com.google.android.exoplayer2.ui.SimpleExoPlayerView
+            android:id="@+id/single_player"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            android:layout_height="wrap_content"
+            android:minHeight="200dp"
+            app:fastforward_increment="10000"
+            app:resize_mode="fixed_width"
+            app:rewind_increment="10000"
+            app:show_timeout="5000" />-->
+        <VideoView
+            android:layout_width="match_parent"
+            android:layout_height="200dp" />
 
-            />
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/playlist_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
 
-    </RelativeLayout>
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="3dp"
+            android:padding="10dp"
+            android:scrollbars="vertical" />
+
+    </LinearLayout>
 
     <RelativeLayout
-        android:id="@+id/header"
+        android:id="@+id/header_playlist"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -37,7 +54,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
             <android.support.v7.widget.Toolbar
-                android:id="@+id/my_toolbar"
+                android:id="@+id/my_toolbar_playlist"
 
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
@@ -46,7 +63,7 @@
                 app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
                 <TextView
-                    android:id="@+id/feeds_chosen"
+                    android:id="@+id/feeds_chosen_playlist"
                     style="@style/HeaderBar"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
@@ -57,7 +74,7 @@
                     android:text="FEEDS" />
 
                 <TextView
-                    android:id="@+id/player_chosen"
+                    android:id="@+id/player_chosen_playlist"
                     style="@style/HeaderBar"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
@@ -70,19 +87,6 @@
 
             </android.support.v7.widget.Toolbar>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="2dp"
-                android:background="@color/black_overlay" />
-            <TextView
-                android:id="@+id/button"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clickable="true"
-                android:focusable="true"
-                android:text="Add your fix"
-                android:textAlignment="center"
-                android:textSize="30sp" />
         </LinearLayout>
 
     </RelativeLayout>

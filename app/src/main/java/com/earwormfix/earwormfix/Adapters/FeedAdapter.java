@@ -45,7 +45,6 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedsViewHolder> implement
     private List<Comment> mComments; // Cached copy of comments
     private LayoutInflater inflater;
     private Context context;
-    private FeedsViewHolder mFvh;
 
 
     @NonNull @Override
@@ -61,7 +60,6 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedsViewHolder> implement
         if (mFeeds != null ) {
             // populate with a list of feeds
             Feed current = mFeeds.get(position);
-            mFvh = holder;
             holder.bind(current);
             // populate with a list of comments inside
             if(mComments!=null ){

@@ -49,15 +49,11 @@ import static im.ene.toro.media.PlaybackInfo.TIME_UNSET;
 public class FeedsActivity extends AppCompatActivity implements ItemClickListener {
     Container container;
     FeedAdapter adapter;
-//    List<Feed> mFeeds;
-//    List<Comment> mComments;
-//    List<String> mUid;
     RecyclerView.LayoutManager layoutManager;
 
     private Toolbar mTopToolbar;
     private FeedViewModel mFeedViewModel;
-    private TextView subNew;
-    //private FeedActivityBinding binding;
+    private TextView subNew,mPlaylist;
     public static final int NEW_FEED_ACTIVITY_REQUEST_CODE = 1;
 
     private SQLiteHandler db;
@@ -70,6 +66,7 @@ public class FeedsActivity extends AppCompatActivity implements ItemClickListene
         super.onCreate(savedInstanceState);
         setContentView( R.layout.activity_feeds);
         subNew = findViewById(R.id.button);
+        mPlaylist = findViewById(R.id.player_chosen);
         container = findViewById(R.id.container);
         //************************************//
         // Initialise comment dialog
@@ -118,6 +115,13 @@ public class FeedsActivity extends AppCompatActivity implements ItemClickListene
         subNew.setOnClickListener(view -> {
             Intent intent = new Intent(FeedsActivity.this, AddFeed.class);
             startActivityForResult(intent, NEW_FEED_ACTIVITY_REQUEST_CODE);
+        });
+
+        //************************************************************//
+        mPlaylist.setOnClickListener(view -> {
+            Intent in1 = new Intent(FeedsActivity.this,PlaylistActivity.class);
+            startActivity(in1);
+            finish();
         });
 
         //************************************************************//
@@ -207,12 +211,12 @@ public class FeedsActivity extends AppCompatActivity implements ItemClickListene
     }
     @Override
     public  void  onFixClick(View view, int position){
-        Toast.makeText(this,"Fixed at: "+position,Toast.LENGTH_LONG).show();
         mFeedViewModel.getAllFeeds().observe(this, feeds -> {
             if(feeds != null) {
                 feeds.get(position).incrementFixed();
-                // Update the adapter.
-                adapter.notifyDataSetChanged();
+                // Update the adapter that only the item there was changed prevent restart of playback.
+                adapter.notifyItemChanged(position);
+                //adapter.notifyDataSetChanged();
             }
         });
     }
