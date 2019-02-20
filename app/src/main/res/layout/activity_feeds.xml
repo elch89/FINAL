@@ -12,6 +12,7 @@
     <RelativeLayout
         android:id="@+id/fullscreen_content"
         android:layout_below="@id/header"
+        android:layout_above="@+id/footer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true">
@@ -30,6 +31,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_alignParentTop="true"
         android:background="#8dd7f4"
         android:gravity="center">
         <LinearLayout
@@ -65,7 +67,8 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center_vertical"
-                    android:paddingLeft="30dp"
+                    android:paddingStart="40dp"
+                    android:paddingEnd="30dp"
                     android:text="My Playlist" />
 
             </android.support.v7.widget.Toolbar>
@@ -74,16 +77,26 @@
                 android:layout_width="match_parent"
                 android:layout_height="2dp"
                 android:background="@color/black_overlay" />
-            <TextView
-                android:id="@+id/button"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clickable="true"
-                android:focusable="true"
-                android:text="Add your fix"
-                android:textAlignment="center"
-                android:textSize="30sp" />
+
         </LinearLayout>
+
+    </RelativeLayout>
+    <RelativeLayout
+        android:id="@+id/footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:background="#8dd7f4"
+        android:layout_alignParentBottom="true">
+        <TextView
+            android:id="@+id/button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:text="Add your fix"
+            android:textAlignment="center"
+            android:textSize="30sp" />
 
     </RelativeLayout>
 
