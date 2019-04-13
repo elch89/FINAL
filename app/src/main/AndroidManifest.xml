@@ -12,7 +12,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Activities.PlaylistActivity"></activity>
         <activity android:name=".Activities.SetProfileActivity" />
         <activity android:name=".Activities.LoginActivity">
             <intent-filter>

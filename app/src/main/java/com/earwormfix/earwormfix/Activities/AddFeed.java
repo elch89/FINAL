@@ -29,12 +29,8 @@ public class AddFeed extends AppCompatActivity {
                 //if (TextUtils.isEmpty(mEditWordView.getText())) {
                  //   setResult(RESULT_CANCELED, replyIntent);
                 //} else {
-
                 String word3 = mEditUid.getText().toString();
-
                 replyIntent.putExtra("uid", word3);
-
-
                 setResult(RESULT_OK, replyIntent);
                 //}
                 finish();

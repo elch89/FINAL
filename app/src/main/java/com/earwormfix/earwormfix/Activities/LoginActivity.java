@@ -44,6 +44,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         TextView regScreen = (TextView) findViewById(R.id.link_to_register);
         Button login = (Button) findViewById(R.id.btnLogin);
+
         inputEmail = findViewById(R.id.email);
         inputPassword = findViewById(R.id.password);
 
@@ -92,6 +93,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             startActivity(intent_r);
             finish();
         }
+
 
 
     }

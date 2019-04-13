@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/footer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:background="#8dd7f4"
+    android:layout_alignParentBottom="true">
+    <TextView
+        android:id="@+id/addFix"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:text="Add your fix"
+        android:textAlignment="center"
+        android:textSize="30sp" />
+
+
+</RelativeLayout>

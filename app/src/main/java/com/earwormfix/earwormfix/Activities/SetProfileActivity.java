@@ -53,6 +53,7 @@ public class SetProfileActivity extends AppCompatActivity {
         submit.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
+//                Intent intent = new Intent(SetProfileActivity.this,FeedsActivity.class);
                 Intent intent = new Intent(SetProfileActivity.this,FeedsActivity.class);
                 startActivity(intent);
                 finish();
