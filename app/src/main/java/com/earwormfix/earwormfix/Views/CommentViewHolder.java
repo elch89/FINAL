@@ -20,7 +20,7 @@ public class CommentViewHolder extends RecyclerView.ViewHolder {
     }
     public void bind(Comment comm){
         comment.setText(comm.getComment());
-        cid.setText(String.valueOf(comm.getId()));
+        cid.setText(comm.getBy());
         time.setText(comm.getToc());
     }
 }

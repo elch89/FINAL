@@ -12,9 +12,14 @@
         android:layout_height="match_parent"
         android:fillViewport="true">
 
-        <VideoView
+        <!--<VideoView
             android:layout_width="match_parent"
-            android:layout_height="200dp" />
+            android:layout_height="200dp" />-->
+        <com.google.android.exoplayer2.ui.PlayerView
+            android:id="@+id/exoplayerview_activity_video"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            />
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/playlist_recycler_view"

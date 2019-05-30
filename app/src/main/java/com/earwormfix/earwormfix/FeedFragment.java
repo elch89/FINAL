@@ -25,8 +25,10 @@ import com.earwormfix.earwormfix.Adapters.FeedViewModel;
 import com.earwormfix.earwormfix.Models.Comment;
 import com.earwormfix.earwormfix.Models.Feed;
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
+import com.earwormfix.earwormfix.helper.SQLiteHandler;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Objects;
 
 import im.ene.toro.PlayerSelector;
@@ -45,6 +47,7 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
     Container container;
     FeedAdapter adapter;
     RecyclerView.LayoutManager layoutManager;
+    SQLiteHandler db;
     private FeedViewModel mFeedViewModel;
 
     public static final int NEW_FEED_ACTIVITY_REQUEST_CODE = 1;
@@ -67,9 +70,11 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
         layoutManager = new LinearLayoutManager(getActivity());
 
         adapter = new FeedAdapter(PlayerSelector.DEFAULT ,getActivity());
+        container.setAdapter(adapter);
         container.setPlayerSelector(adapter);
-
         container.setCacheManager(adapter);
+        //*****************Sqlite initializer******************************************//
+        db = new SQLiteHandler(getActivity());
         //*******The following initializes the video view in a container************************//
         container.setLayoutManager(layoutManager);
         container.setAdapter(adapter);
@@ -79,31 +84,45 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
             return new PlaybackInfo(INDEX_UNSET, TIME_UNSET, volumeInfo);
         });
 
+
         // Only when you use Container inside a CoordinatorLayout and depends on Behavior.
         ToroUtil.wrapParamBehavior(container, () -> container.onScrollStateChanged(SCROLL_STATE_IDLE));
+
         //*****************************//
         // Sets up a listener for comments pressed inside view holders
         adapter.setClickListener(this);
         //---------------Observe live data from room persistence library(data base)----------------------//
+        //TODO: change to paging from server!!!!!!!!
         mFeedViewModel = ViewModelProviders.of(this).get(FeedViewModel.class);
         // Add an observer that observes the LiveData in the ViewModel.
         // To display the current contents of the database,
         mFeedViewModel.getAllFeeds().observe(this, feeds -> {
             // Update the cached copy of the feeds in the adapter.
+            //adapter.submitList(feeds);
             adapter.setFeeds(feeds);
+
         });
         mFeedViewModel.getAllComments().observe(this,comments -> {
             // Update the cached copy of the comments in the adapter.
             adapter.setComments(comments);
         });
+
+        //mFeedViewModel.getAllFeeds().observe(this, adapter::submitList);
+
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == NEW_FEED_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
-            Feed feed = new Feed( getCurrentTime(), data.getStringExtra("uid"), R.drawable.avatar_dog);
+            HashMap<String, String> userProfile = db.getProfileDetails();
+            HashMap<String, String> user = db.getUserDetails();
+            if(userProfile!=null && user!= null){
+                int avat = Integer.parseInt(Objects.requireNonNull(userProfile.get("avatar")));
+                Feed feed = new Feed( getCurrentTime(), Objects.requireNonNull(user.get("name")), avat);
+                //data.getStringExtra("uid")
+                mFeedViewModel.insert(feed);
+            }
 
-            mFeedViewModel.insert(feed);
         } else {
             Toast.makeText(
                     getActivity(),
@@ -124,6 +143,22 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
         return rootView;
     }
 
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser && getView()!=null);
+
+        if (!isVisibleToUser) {
+            if(container != null){
+                container.setPlayerSelector(null);
+            }
+        }
+        else{
+            if(container!= null){
+                initContainer();
+            }
+
+        }
+    }
 
 
 
@@ -144,6 +179,11 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
                 //adapter.notifyDataSetChanged();
             }
         });
+    }
+
+    @Override
+    public void onSubmitEdit(View view, int position) {
+        // do nothing
     }
 
     private int mFid = -1;
@@ -174,7 +214,7 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
                 // Add the comment to room and then close pop up
                 // Position + feed id --> is the feed that was chosen to comment about
                 if(mFid != -1){
-                    Comment comment = new Comment((position + mFid), txtComment.getText().toString(),getCurrentTime());
+                    Comment comment = new Comment("  "/*db.getUserDetails().get("name")*/,(position + mFid), txtComment.getText().toString(),getCurrentTime());
                     mFeedViewModel.insertComment(comment);
                 }
                 else{// Means feeds list is empty
@@ -192,4 +232,24 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
         long millis = new Date().getTime();
         return DateUtils.formatDateTime( getActivity(),millis, DateUtils.FORMAT_SHOW_TIME);
     }
+
+    public void initContainer(){
+        container.setPlayerSelector(adapter);
+
+        container.setCacheManager(adapter);
+        //*******The following initializes the video view in a container************************//
+        container.setLayoutManager(layoutManager);
+        container.setAdapter(adapter);
+        container.setPlayerDispatcher(__ -> 500); // The playback will be delayed 500ms.
+        container.setPlayerInitializer(order -> {
+            VolumeInfo volumeInfo = new VolumeInfo(false, 0.75f);
+            return new PlaybackInfo(INDEX_UNSET, TIME_UNSET, volumeInfo);
+        });
+
+
+        // Only when you use Container inside a CoordinatorLayout and depends on Behavior.
+        ToroUtil.wrapParamBehavior(container, () -> container.onScrollStateChanged(SCROLL_STATE_IDLE));
+        //*****************************//
+    }
+
 }

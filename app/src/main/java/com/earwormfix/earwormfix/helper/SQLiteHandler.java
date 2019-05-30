@@ -24,6 +24,8 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     // Login table name
     private static final String TABLE_USER = "user";
+    private static final String TABLE_PROFILE = "profile";
+
 
     // Login Table Columns names
     private static final String KEY_ID = "id";
@@ -32,9 +34,17 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     private static final String KEY_UID = "uid";
     private static final String KEY_CREATED_AT = "created_at";
 
+    // Profile Table Columns names
+    private static final String KEY_FULL_NAME = "full_name";
+    private static final String KEY_PHONE = "phone";
+    private static final String KEY_GENDER = "gender";
+    private static final String KEY_BIRTH = "birth";
+    private static final String KEY_GENRE = "genre";
+    private static final String KEY_AVATAR = "avatar";
+
     public SQLiteHandler(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
-    }
+        super(context, DATABASE_NAME, null, 2);
+    }//change version to 1 after clearing cache----DATABASE_VERSION
 
     // Creating Tables
     @Override
@@ -45,6 +55,13 @@ public class SQLiteHandler extends SQLiteOpenHelper {
                 + KEY_CREATED_AT + " TEXT" + ")";
         db.execSQL(CREATE_LOGIN_TABLE);
 
+        String CREATE_PROFILE_TABLE = "CREATE TABLE " + TABLE_PROFILE + "("
+                + KEY_ID + " INTEGER PRIMARY KEY," + KEY_FULL_NAME + " TEXT,"
+                + KEY_EMAIL + " TEXT UNIQUE,"+ KEY_PHONE + " TEXT,"+ KEY_GENDER + " TEXT,"
+                + KEY_BIRTH + " TEXT,"+ KEY_GENRE + " TEXT,"+ KEY_AVATAR + " TEXT,"
+                + KEY_UID + " TEXT," + KEY_CREATED_AT + " TEXT" + ")";
+        db.execSQL(CREATE_PROFILE_TABLE);
+
         Log.d(TAG, "Database tables created");
     }
 
@@ -53,6 +70,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // Drop older table if existed
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_USER);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PROFILE);
 
         // Create tables again
         onCreate(db);
@@ -74,7 +92,31 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         long id = db.insert(TABLE_USER, null, values);
         db.close(); // Closing database connection
 
-        Log.d(TAG, "New user inserted into sqlite: " + id);
+        Log.d(TAG, "New user inserted into sqlite: " + id+" ----> ");
+    }
+    /**
+     * Storing user details in database
+     * */
+    public void addProfile(String fullName, String email, String phone, String gender, String birth,
+                           String genre, String avatar, String uid, String created_at) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(KEY_FULL_NAME, fullName); // Name
+        values.put(KEY_EMAIL, email); // Email
+        values.put(KEY_PHONE, phone);
+        values.put(KEY_GENDER, gender);
+        values.put(KEY_BIRTH, birth);
+        values.put(KEY_GENRE, genre);
+        values.put(KEY_AVATAR, avatar);
+        values.put(KEY_UID, uid); //
+        values.put(KEY_CREATED_AT, created_at); // Created At
+
+        // Inserting Row
+        long id = db.insert(TABLE_PROFILE, null, values);
+        db.close(); // Closing database connection
+
+        Log.d(TAG, "New profile inserted into sqlite: " + id);
     }
 
     /**
@@ -101,6 +143,35 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
         return user;
     }
+    /**
+     * Getting user profile data from database
+     * */
+    public HashMap<String, String> getProfileDetails() {
+        HashMap<String, String> user = new HashMap<String, String>();
+        String selectQuery = "SELECT  * FROM " + TABLE_PROFILE;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        // Move to first row
+        cursor.moveToFirst();
+        if (cursor.getCount() > 0) {
+            user.put("full_name", cursor.getString(1));
+            user.put("email", cursor.getString(2));
+            user.put("phone", cursor.getString(3));
+            user.put("gender", cursor.getString(4));
+            user.put("birth", cursor.getString(5));
+            user.put("genre", cursor.getString(6));
+            user.put("avatar", cursor.getString(7));
+            user.put("uid", cursor.getString(8));
+            user.put("created_at", cursor.getString(9));
+        }
+        cursor.close();
+        db.close();
+        // return user
+        Log.d(TAG, "Fetching user profile from Sqlite: " + user.toString());
+
+        return user;
+    }
 
     /**
      * Re crate database Delete all tables and create them again
@@ -112,5 +183,26 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         db.close();
 
         Log.d(TAG, "Deleted all user info from sqlite");
+    }
+    public void deleteProfiles() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        // Delete All Rows
+        db.delete(TABLE_PROFILE, null, null);
+        db.close();
+
+        Log.d(TAG, "Deleted all profile info from sqlite");
+    }
+
+    public void updateProfile(String col, String email, String param, String updated_at){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(col,param);
+        String[] arg = new String[]{email};
+        // Updating Row
+        db.update(TABLE_PROFILE,  values, "email=?",arg);
+        db.close(); // Closing database connection
+        Log.d(TAG, "Updated all profile info from sqlite");
+
+
     }
 }

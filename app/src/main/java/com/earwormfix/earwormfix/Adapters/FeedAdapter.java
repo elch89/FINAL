@@ -1,11 +1,13 @@
 package com.earwormfix.earwormfix.Adapters;
 
+import android.annotation.SuppressLint;
+import android.arch.paging.PagedListAdapter;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -29,11 +31,12 @@ import im.ene.toro.ToroUtil;
 import im.ene.toro.widget.Container;
 
 /** display the data in a RecyclerView*/
-public class FeedAdapter extends RecyclerView.Adapter<FeedsViewHolder> implements PlayerSelector, CacheManager {
+public class FeedAdapter extends PagedListAdapter<Feed, FeedsViewHolder> implements PlayerSelector, CacheManager {
 
     private ItemClickListener clickListener;
 
     public FeedAdapter(PlayerSelector origin,Context context) {
+        super(DIFF_CALLBACK);
         this.origin = ToroUtil.checkNotNull(origin);
         this.context = context;
     }
@@ -159,4 +162,23 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedsViewHolder> implement
     public void setClickListener(ItemClickListener itemClickListener) {
         clickListener = itemClickListener;
     }
+
+//**************************************************************************///
+    private static DiffUtil.ItemCallback<Feed> DIFF_CALLBACK =
+            new DiffUtil.ItemCallback<Feed>() {
+                // Concert details may have changed if reloaded from the database,
+                // but ID is fixed.
+                @Override
+                public boolean areItemsTheSame(Feed oldConcert, Feed newConcert) {
+                    return oldConcert.getId() == newConcert.getId();
+                }
+
+                @SuppressLint("DiffUtilEquals")
+                @Override
+                public boolean areContentsTheSame(Feed oldConcert,
+                                                  Feed newConcert) {
+                    return oldConcert.equals(newConcert);
+                }
+            };
+
 }

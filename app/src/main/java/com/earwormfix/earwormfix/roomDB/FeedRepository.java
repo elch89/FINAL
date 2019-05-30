@@ -2,12 +2,12 @@ package com.earwormfix.earwormfix.roomDB;
 
 import android.app.Application;
 import android.arch.lifecycle.LiveData;
+import android.arch.paging.LivePagedListBuilder;
+import android.arch.paging.PagedList;
 import android.os.AsyncTask;
 
 import com.earwormfix.earwormfix.Models.Comment;
 import com.earwormfix.earwormfix.Models.Feed;
-
-import java.util.List;
 /**handles data operations. It provides a clean API to the rest of the app for app data
  * A Repository manages query threads and allows you to use multiple backends.
  * In the most common example, the Repository implements the logic for deciding whether
@@ -15,23 +15,30 @@ import java.util.List;
 public class FeedRepository {
     private FeedsDao mFeedDao;
     private CommentsDao mCommentsDao;
-    private LiveData<List<Comment>> mAllComments;
-    private LiveData<List<Feed>> mAllFeeds;
+    /*private LiveData<List<Comment>> mAllComments;
+    private LiveData<List<Feed>> mAllFeeds;*/
+    private LiveData<PagedList<Comment>> mAllComments;
+    private LiveData<PagedList<Feed>> mAllFeeds;
     //private   LiveData<List<String>> mAllUid;
 
     public FeedRepository(Application application) {
         FeedRoomDatabase db = FeedRoomDatabase.getDatabase(application);
         mFeedDao = db.feedsDao();
         mCommentsDao = db.commentsDao();
-        mAllComments = mCommentsDao.getAllComments();
-        //mAllUid = mCommentsDao.getAllUids();
-        mAllFeeds = mFeedDao.getAllFeeds();
+        mAllComments = new LivePagedListBuilder<>(mCommentsDao.getAllComments(), 30).build();
+        mAllFeeds = new LivePagedListBuilder<>(mFeedDao.getAllFeeds(), 30).build();
     }
 
-    public  LiveData<List<Feed>> getAllFeeds() {
+    /*public  LiveData<List<Feed>> getAllFeeds() {
         return mAllFeeds;
     }
     public  LiveData<List<Comment>> getAllComments() {
+        return mAllComments;
+    }*/
+    public  LiveData<PagedList<Feed>> getAllFeeds() {
+        return mAllFeeds;
+    }
+    public  LiveData<PagedList<Comment>> getAllComments() {
         return mAllComments;
     }
     //public  LiveData<List<String>> getCommentsUid(){

@@ -3,7 +3,6 @@ package com.earwormfix.earwormfix.Adapters;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,10 +40,10 @@ public class CommentAdapter extends
     public void onBindViewHolder(@NonNull CommentViewHolder viewHolder, int position) {
         if(items!=null) {
             Comment item = items.get(position);
-//            if(item == null){
-//                item = new Comment("1","There are no Comments to show","00:00:00");
-//            }
-            Log.d("Comment testing","id is:"+item.getId());
+           /* if(item == null){
+                item = new Comment("1","There are no Comments to show","00:00:00");
+            }
+            Log.d("Comment testing","id is:"+item.getId());*/
             viewHolder.bind(item);
 
         }

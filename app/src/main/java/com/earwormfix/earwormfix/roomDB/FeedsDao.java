@@ -1,6 +1,6 @@
 package com.earwormfix.earwormfix.roomDB;
 
-import android.arch.lifecycle.LiveData;
+import android.arch.paging.DataSource;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.OnConflictStrategy;
@@ -9,7 +9,6 @@ import android.arch.persistence.room.Update;
 
 import com.earwormfix.earwormfix.Models.Feed;
 
-import java.util.List;
 /**specify SQL queries and associate them with method calls */
 @Dao
 public interface FeedsDao {
@@ -25,15 +24,17 @@ public interface FeedsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insert(Feed feed);
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insert(Feed... feeds);
+    void insertAll(Feed... feeds);
     @Update(onConflict = OnConflictStrategy.REPLACE)
     void update(Feed feed);
 
     @Query("DELETE FROM feed_table")
     void deleteAll();
 
+    /*@Query("SELECT * from feed_table ORDER BY fid ASC")
+    LiveData<List<Feed>> getAllFeeds();*/
     @Query("SELECT * from feed_table ORDER BY fid ASC")
-    LiveData<List<Feed>> getAllFeeds();
+    DataSource.Factory<Integer,Feed> getAllFeeds();
 
 
 

@@ -2,16 +2,22 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "c7b881ffacb1fc6a8cd647ffc339795a",
+    "identityHash": "2986591d9a1588ecf45c5190e09c786e",
     "entities": [
       {
         "tableName": "feed_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`fid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `top` TEXT NOT NULL, `uid` TEXT NOT NULL, `fixed` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`fid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `video` TEXT NOT NULL, `top` TEXT NOT NULL, `uid` TEXT NOT NULL, `fixed` INTEGER NOT NULL, `profile_pic` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "fid",
             "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vidUri",
+            "columnName": "video",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -29,6 +35,12 @@
           {
             "fieldPath": "fixed",
             "columnName": "fixed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "profile_pic",
+            "columnName": "profile_pic",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -53,7 +65,7 @@
       },
       {
         "tableName": "comment_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`cid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `feedId` INTEGER NOT NULL, `Comment` TEXT NOT NULL, `TOC` TEXT NOT NULL, FOREIGN KEY(`feedId`) REFERENCES `feed_table`(`fid`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`cid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `feedId` INTEGER NOT NULL, `Comment` TEXT NOT NULL, `TOC` TEXT NOT NULL, `by` TEXT, FOREIGN KEY(`feedId`) REFERENCES `feed_table`(`fid`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -78,6 +90,12 @@
             "columnName": "TOC",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "by",
+            "columnName": "by",
+            "affinity": "TEXT",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -121,7 +139,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"c7b881ffacb1fc6a8cd647ffc339795a\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"2986591d9a1588ecf45c5190e09c786e\")"
     ]
   }
 }

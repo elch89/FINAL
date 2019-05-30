@@ -137,7 +137,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="20dp"
                     android:ems="10"
-                    android:hint="Ganre"
+                    android:hint="Genre"
                     android:inputType="text" />
 
                 <Button

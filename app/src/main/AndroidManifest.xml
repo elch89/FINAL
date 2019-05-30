@@ -3,6 +3,9 @@
     package="com.earwormfix.earwormfix">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-feature android:name="android.hardware.camera2" android:required="true" />
 
     <application
         android:name=".AppController"
@@ -12,6 +15,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".Activities.ProfileActivity"></activity>
         <activity android:name=".Activities.SetProfileActivity" />
         <activity android:name=".Activities.LoginActivity">
             <intent-filter>
@@ -25,7 +29,7 @@
             android:name=".Activities.FeedsActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_feeds"
-            android:theme="@style/FullscreenTheme" />
+            android:theme="@style/AppTheme" />
         <activity android:name=".Activities.AddFeed" />
     </application>
 

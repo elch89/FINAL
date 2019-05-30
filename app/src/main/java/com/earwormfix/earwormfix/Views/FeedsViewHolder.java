@@ -52,7 +52,8 @@ public class FeedsViewHolder extends RecyclerView.ViewHolder implements ToroPlay
     }
 
      public void bind(Feed item) {
-        videoUri = Uri.parse("file:///android_asset/video/video.mp4");
+        String mediaName = item.getVidUri();//"https://earwormfix.com/post/123/20190529_130707.mp4";// item.getVid()
+        videoUri = Uri.parse(mediaName);//"file:///android_asset/video/video.mp4"
         pDate.setText(item.getTop());
         if(item.getFixed()>0){
             mFixed.setText(String.format("%s  %s", FIXED_ICON, String.valueOf(item.getFixed())));

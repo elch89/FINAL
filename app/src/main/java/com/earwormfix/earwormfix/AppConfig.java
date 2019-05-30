@@ -3,9 +3,14 @@ package com.earwormfix.earwormfix;
 public class AppConfig {
     //TODO: change my localhost IP - 192.168... for testing- will be changed to server eventually
     // Server user login url
-    public static String URL_LOGIN = "http://192.168.0.119/earwormfix/login.php";
+    public static String URL_LOGIN = "https://earwormfix.com/login.php";
 
     // Server user register url
-    public static String URL_REGISTER = "http://192.168.0.119/earwormfix/register.php";
+    public static String URL_REGISTER = "https://earwormfix.com/register.php";
+
+    // Server user profile url
+    public static String URL_PROFILE = "https://earwormfix.com/profile.php";
+    // Server user update profile url
+    public static String URL_UPDATE = "https://earwormfix.com/update.php";
 }
-/** */
+/** 10.0.2.2*/

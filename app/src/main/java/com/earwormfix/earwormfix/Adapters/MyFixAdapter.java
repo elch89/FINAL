@@ -9,10 +9,10 @@ import android.widget.TextView;
 
 import com.earwormfix.earwormfix.R;
 
-public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHolder> {
+public class MyFixAdapter extends RecyclerView.Adapter<MyFixAdapter.ViewHolder> {
     private String[] mData;
 
-    public PlaylistAdapter(String[] mData){
+    public MyFixAdapter(String[] mData){
         this.mData = mData;
     }
     @NonNull

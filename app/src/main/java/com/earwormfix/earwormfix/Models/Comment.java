@@ -28,8 +28,11 @@ public class Comment {
     @ColumnInfo(name = "TOC")// Time of comment
     private String toc;
 
+    @ColumnInfo(name = "by")// Time of comment
+    private String by;
 
-    public Comment(int feedId, @NonNull String comment, @NonNull String toc){
+
+    public Comment(String by, int feedId, @NonNull String comment, @NonNull String toc){
         this.comment = comment;
         this.feedId = feedId;
         this.toc = toc;
@@ -46,6 +49,12 @@ public class Comment {
     public String getComment() {
         return comment;
     }
+
+    @NonNull
+    public String getBy() {
+        return by;
+    }
+
     public int getFeedId() {
         return feedId;
     }
@@ -64,5 +73,9 @@ public class Comment {
 
     public void setFeedId(int feedId) {
         this.feedId = feedId;
+    }
+
+    public void setBy(String by) {
+        this.by = by;
     }
 }

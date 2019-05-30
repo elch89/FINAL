@@ -7,8 +7,7 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RestApiFactory {
-    private static String BASE_URL = "https://newsapi.org";
-
+    private static String BASE_URL = "https://earwormfix.com";
     public static RestApi create() {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);

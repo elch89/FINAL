@@ -3,17 +3,23 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".FeedsActivity">
+    <item android:id="@+id/search"
+        android:icon="@drawable/search"
+        android:title="Search"/>
+    <item android:id="@+id/my_profile"
+        android:icon="@drawable/user"
+        android:title="My profile"/>
+    <item android:id="@+id/invite"
+        android:icon="@drawable/network"
+        android:title="Invite a friend"/>
+    <item android:id="@+id/contact"
+        android:icon="@drawable/mail"
+        android:title="Contact us"/>
+    <item android:id="@+id/settings"
+        android:icon="@drawable/settings"
+        android:title="Settings"/>
+    <item android:id="@+id/logout"
+        android:icon="@drawable/logout"
+        android:title="Logout"/>
 
-    <item
-        android:id="@+id/action_profile"
-        android:title="View profile"
-        app:showAsAction="never"/>
-    <item
-        android:id="@+id/action_logout"
-        android:title="Log out"
-        app:showAsAction="never"/>
-    <item
-        android:id="@+id/action_options"
-        android:title="Settings"
-        app:showAsAction="never"/>
 </menu>

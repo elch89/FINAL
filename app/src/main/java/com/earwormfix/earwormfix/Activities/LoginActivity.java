@@ -39,7 +39,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        // for videoview
         PACKAGE_NAME = getApplicationContext().getPackageName();
 
         TextView regScreen = (TextView) findViewById(R.id.link_to_register);
@@ -137,7 +136,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
                         // Inserting row in users table
                         db.addUser(name, email, uid, created_at);
-
+                        fetchProfile(email);
                         // Launch main activity
                         Intent intent = new Intent(LoginActivity.this,
                                 FeedsActivity.class);
@@ -197,6 +196,81 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private void hideDialog() {
         if (pDialog.isShowing())
             pDialog.dismiss();
+    }
+
+    // Fetch user profile:
+    private void fetchProfile(final String email){
+        // Tag used to cancel the request
+        String tag_string_req = "req_profile";
+
+        showDialog();
+        StringRequest strReq = new StringRequest(Request.Method.POST,
+                AppConfig.URL_PROFILE, new Response.Listener<String>() {
+
+            @Override
+            public void onResponse(String response) {
+                hideDialog();
+                try {
+                    JSONObject jObj = new JSONObject(response);
+                    boolean error = jObj.getBoolean("error");
+                    if (!error) {
+                        // User successfully stored in MySQL
+                        // Now store the user in sqlite
+                        String uid = jObj.getString("uid");
+
+                        JSONObject user = jObj.getJSONObject("profile");
+                        String full_name = user.getString("full_name");
+                        String email = user.getString("email");
+                        String phone = user.getString("phone");
+                        String gender = user.getString("gender");
+                        String birth = user.getString("birth");
+                        String genre = user.getString("genre");
+                        String avatar = user.getString("avatar");
+
+
+                        String created_at = user
+                                .getString("created_at");
+
+                        // Inserting row in profiles table
+                        db.addProfile(full_name, email, phone, gender, birth, genre, avatar, uid, created_at);
+
+                    } else {
+
+                        // Error occurred in fetch. Get the error message
+                        String errorMsg = jObj.getString("error_msg");
+                        Toast.makeText(getApplicationContext(),
+                                errorMsg, Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getApplicationContext(),
+                        error.getMessage(), Toast.LENGTH_LONG).show();
+
+                hideDialog();
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting params to register url
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("email", email);
+
+                return params;
+            }
+
+        };
+
+        // Adding request to request queue
+        AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
+
     }
 
 

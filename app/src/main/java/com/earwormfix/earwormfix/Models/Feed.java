@@ -16,7 +16,7 @@ public class Feed  {
     private int id; // table unique id
     @NonNull
     @ColumnInfo(name = "video")
-    private String vidId;
+    private String vidUri;
     @NonNull
     @ColumnInfo(name = "top")
     private String top;// Time of post
@@ -32,7 +32,7 @@ public class Feed  {
     public Feed(@NonNull String top,@NonNull String uid, int profile_pic){
 
         this.profile_pic = profile_pic;
-        this.vidId = "0";
+        this.vidUri = "0";
         this.fixed = 0;
         this.top = top;
         this.uid = uid;
@@ -56,8 +56,8 @@ public class Feed  {
         return uid;
     }
     @NonNull
-    public String getVidId() {
-        return vidId;
+    public String getVidUri(){
+        return vidUri;
     }
 
     public int getProfile_pic() {
@@ -81,8 +81,8 @@ public class Feed  {
         this.fixed = fixed;
     }
 
-    public void setVidId(@NonNull String vidId) {
-        this.vidId = vidId;
+    public void setVidUri(@NonNull String vidUri) {
+        this.vidUri = vidUri;
     }
 
     public void incrementFixed(){
