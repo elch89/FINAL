@@ -13,10 +13,12 @@ import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
 
 public class ProfileAdapter extends RecyclerView.Adapter<ProfileAdapter.ViewHolder> {
     private String[] mData;
+    private String[] mCurrent;
     private ItemClickListener mClickListener;
 
-    public ProfileAdapter(String[] mData){
+    public ProfileAdapter(String[] mData, String[] mDesc){
         this.mData = mData;
+        this.mCurrent = mDesc;
     }
     @NonNull
     @Override
@@ -30,6 +32,7 @@ public class ProfileAdapter extends RecyclerView.Adapter<ProfileAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(@NonNull ProfileAdapter.ViewHolder holder, int position) {
+        holder.mCurr.setText(mCurrent[position]);
         holder.mTV.setText(mData[position]);
     }
 
@@ -43,13 +46,15 @@ public class ProfileAdapter extends RecyclerView.Adapter<ProfileAdapter.ViewHold
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         public TextView mTV;
+        public TextView mCurr;
         public Button btnEdit;
         ItemClickListener clickListener;
 
         public ViewHolder(View itemView, ItemClickListener mListener){
             super(itemView);
             clickListener = mListener;
-            mTV = itemView.findViewById(R.id.profile_att);
+            mTV = itemView.findViewById(R.id.profile_att_name);
+            mCurr = itemView.findViewById(R.id.profile_att);
             btnEdit = itemView. findViewById(R.id.profile_edit);
             btnEdit.setOnClickListener(this);
         }

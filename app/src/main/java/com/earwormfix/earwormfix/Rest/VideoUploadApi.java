@@ -13,5 +13,5 @@ import retrofit2.http.PartMap;
 public interface VideoUploadApi {
     @Multipart
     @POST("upload.php")
-    Call<ResultObject> uploadVideoToServer(@Part MultipartBody.Part vid, @PartMap() Map<String, RequestBody> partMap);
+    Call<ResultObject> uploadVideoToServer(@Part MultipartBody.Part vid,@Part MultipartBody.Part img, @PartMap() Map<String, RequestBody> partMap);
 }

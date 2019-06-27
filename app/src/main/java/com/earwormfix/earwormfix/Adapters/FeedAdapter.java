@@ -1,27 +1,26 @@
 package com.earwormfix.earwormfix.Adapters;
 
-import android.annotation.SuppressLint;
 import android.arch.paging.PagedListAdapter;
 import android.content.Context;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.LinearLayoutManager;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
-import com.earwormfix.earwormfix.Activities.LoginActivity;
 import com.earwormfix.earwormfix.Models.Comment;
 import com.earwormfix.earwormfix.Models.Feed;
 import com.earwormfix.earwormfix.R;
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
+import com.earwormfix.earwormfix.Utilitties.NetworkState;
 import com.earwormfix.earwormfix.Views.FeedsViewHolder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import im.ene.toro.CacheManager;
@@ -34,9 +33,16 @@ import im.ene.toro.widget.Container;
 public class FeedAdapter extends PagedListAdapter<Feed, FeedsViewHolder> implements PlayerSelector, CacheManager {
 
     private ItemClickListener clickListener;
+    private NetworkState networkState;
+    //private List<Feed> mFeeds; // Cached copy of feeds
+    //private List<Comment> mComments; // Cached copy of comments
+    private LayoutInflater inflater;
+    private Context context;
+
 
     public FeedAdapter(PlayerSelector origin,Context context) {
-        super(DIFF_CALLBACK);
+        super(Feed.CALLBACK);
+
         this.origin = ToroUtil.checkNotNull(origin);
         this.context = context;
     }
@@ -44,10 +50,6 @@ public class FeedAdapter extends PagedListAdapter<Feed, FeedsViewHolder> impleme
     public FeedAdapter() {//getAplicationContext()
         this(PlayerSelector.DEFAULT,null);
     }
-    private List<Feed> mFeeds; // Cached copy of feeds
-    private List<Comment> mComments; // Cached copy of comments
-    private LayoutInflater inflater;
-    private Context context;
 
 
     @NonNull @Override
@@ -55,55 +57,41 @@ public class FeedAdapter extends PagedListAdapter<Feed, FeedsViewHolder> impleme
         if (inflater == null || inflater.getContext() != parent.getContext()) {
             inflater = LayoutInflater.from(parent.getContext());
         }
-
-        return new UiAwareVideoViewHolder(this, parent, inflater, R.layout.feed_view,clickListener);
+        return new UiAwareVideoViewHolder(this, parent, inflater, R.layout.feed_view, context ,clickListener);
     }
 
     @Override public void onBindViewHolder(@NonNull FeedsViewHolder holder, int position) {
-        if (mFeeds != null ) {
-            // populate with a list of feeds
-            Feed current = mFeeds.get(position);
+        List<Comment> mComments = new ArrayList<>();
+        Feed current = getItem(position);
+        if(current!=null){
+            if(Objects.requireNonNull(current).getComments() != null ){
+                mComments.addAll(Arrays.asList(current.getComments()));
+            }
             holder.bind(current);
             // populate with a list of comments inside
-            if(mComments!=null ){
-                LinearLayoutManager lln = new LinearLayoutManager(context);
-                holder.comments.setLayoutManager(lln);
+            LinearLayoutManager lln = new LinearLayoutManager(context);
+            holder.comments.setLayoutManager(lln);
 
-                // get matching comments to feed chosen
-                List<Comment> sortedById = getMatchingComments(current);
-                if(sortedById.isEmpty()){
-                    holder.comments.setMinimumHeight(200);
-                }
-                CommentAdapter commentAdapter = new CommentAdapter(R.layout.comment_view,sortedById);
-                holder.comments.setAdapter(commentAdapter);
+            if (mComments.isEmpty()) {
+                holder.comments.setMinimumHeight(200);
             }
-
+            CommentAdapter commentAdapter = new CommentAdapter(R.layout.comment_view, mComments);
+            holder.comments.setAdapter(commentAdapter);
         }
-    }
-    // comments are sorted in database - we get the matching comments to the specified feed by ID
-    private List<Comment> getMatchingComments(Feed currentFeed){
-        List<Comment> sortedById = new ArrayList<>();
-        if(!mComments.isEmpty()) {
-            for (Comment comm : mComments) {
-                if(comm.getFeedId() == currentFeed.getId()){
-                    sortedById.add(comm);
-                }
-            }
-        }
-        return sortedById;
     }
 
 
     /// PlayerSelector implementation
 
-    @SuppressWarnings("WeakerAccess") //
+    @SuppressWarnings("WeakerAccess")
     final PlayerSelector origin;
     // Keep a cache of the Playback order that is manually paused by User.
     // So that if User scroll to it again, it will not start play.
     // Value will be updated by the ViewHolder.
     final AtomicInteger lastUserPause = new AtomicInteger(-1);
 
-    @NonNull @Override public Collection<ToroPlayer> select(@NonNull Container container,
+    @NonNull
+    @Override public Collection<ToroPlayer> select(@NonNull Container container,
                                                             @NonNull List<ToroPlayer> items) {
         Collection<ToroPlayer> originalResult = origin.select(container, items);
         ArrayList<ToroPlayer> result = new ArrayList<>(originalResult);
@@ -118,12 +106,10 @@ public class FeedAdapter extends PagedListAdapter<Feed, FeedsViewHolder> impleme
         return result;
     }
 
-    @NonNull @Override public PlayerSelector reverse() {
+    @NonNull
+    @Override public PlayerSelector reverse() {
         return origin.reverse();
     }
-
-    /// CacheManager implementation
-
     @Nullable
     @Override public Object getKeyForOrder(int order) {
         return order;
@@ -133,52 +119,22 @@ public class FeedAdapter extends PagedListAdapter<Feed, FeedsViewHolder> impleme
         return key instanceof Integer ? (Integer) key : null;
     }
 
-
-    public void setFeeds(List<Feed> feeds){
-        mFeeds = feeds;
-        notifyDataSetChanged();
-    }
-    public void setComments(List<Comment> comments){
-        mComments = comments;
-        notifyDataSetChanged();
+    public Feed getFeedAt(int position){
+        return getItem(position);
     }
 
-    // getItemCount() is called many times, and when it is first called,
-    // mWords has not been updated (means initially, it's null, and we can't return null).
     @Override
     public int getItemCount() {
-        if (mFeeds != null)
-            return mFeeds.size();
-        else return 0;
-    }
+        if(getCurrentList()!=null)
+            return getCurrentList().size();
+        return 0;
 
-
-
-    private Uri getMedia(String mediaName) {
-        return Uri.parse("android.resource://" + LoginActivity.PACKAGE_NAME +
-                "/raw/" + mediaName);
     }
 
     public void setClickListener(ItemClickListener itemClickListener) {
         clickListener = itemClickListener;
     }
 
-//**************************************************************************///
-    private static DiffUtil.ItemCallback<Feed> DIFF_CALLBACK =
-            new DiffUtil.ItemCallback<Feed>() {
-                // Concert details may have changed if reloaded from the database,
-                // but ID is fixed.
-                @Override
-                public boolean areItemsTheSame(Feed oldConcert, Feed newConcert) {
-                    return oldConcert.getId() == newConcert.getId();
-                }
 
-                @SuppressLint("DiffUtilEquals")
-                @Override
-                public boolean areContentsTheSame(Feed oldConcert,
-                                                  Feed newConcert) {
-                    return oldConcert.equals(newConcert);
-                }
-            };
 
 }

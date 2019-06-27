@@ -7,21 +7,21 @@ public class UserProfile {
     private String bDate;
     private String genre;
     private String gender;
-    private String avatar;
+    private String photo;
     public UserProfile(String fullName, String email, String bDate, String genre,
                        String gender, String avatar, String phone){
         this.phone = phone;
         this.email = email;
         this.bDate = bDate;
-        this.avatar = avatar;
+        this.photo = avatar;
         this.genre = genre;
         this.gender = gender;
         this.fullName = fullName;
 
     }
 
-    public String getAvatar() {
-        return avatar;
+    public String getPhoto() {
+        return photo;
     }
 
     public String getbDate() {
@@ -48,8 +48,8 @@ public class UserProfile {
         return phone;
     }
 
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
+    public void setPhoto(String avatar) {
+        this.photo = avatar;
     }
 
     public void setbDate(String bDate) {

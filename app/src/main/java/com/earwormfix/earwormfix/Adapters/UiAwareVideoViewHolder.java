@@ -16,6 +16,7 @@
 
 package com.earwormfix.earwormfix.Adapters;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -45,8 +46,8 @@ class UiAwareVideoViewHolder extends FeedsViewHolder {
   @SuppressWarnings("WeakerAccess") final FeedAdapter adapter;
 
   public UiAwareVideoViewHolder(FeedAdapter adapter, ViewGroup parent, LayoutInflater inflater,
-                                int layoutRes, ItemClickListener mListener) {
-    super(parent, inflater, layoutRes,mListener);
+                                int layoutRes, Context context, ItemClickListener mListener) {
+    super(parent, inflater, layoutRes,context,mListener);
     this.adapter = adapter;
 
     // PlayerViewHelper will lazily prepare MediaSource: it will prepare in the first time

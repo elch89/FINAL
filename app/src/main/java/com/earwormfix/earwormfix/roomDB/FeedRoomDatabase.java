@@ -1,3 +1,4 @@
+/*
 package com.earwormfix.earwormfix.roomDB;
 
 import android.arch.persistence.db.SupportSQLiteDatabase;
@@ -12,21 +13,18 @@ import android.util.Log;
 import com.earwormfix.earwormfix.Models.Comment;
 import com.earwormfix.earwormfix.Models.Feed;
 import com.earwormfix.earwormfix.Models.Videos;
-import com.earwormfix.earwormfix.Rest.RestApi;
+import com.earwormfix.earwormfix.R;
+import com.earwormfix.earwormfix.Rest.RetrofitInstance;
+import com.earwormfix.earwormfix.Rest.FetchFeedApi;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.concurrent.Executors;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
-/** Add the room database*/
+*/
+/** Add the room database*//*
+
 @Database(entities = {Feed.class, Comment.class}, version = 4)
 public abstract class FeedRoomDatabase extends RoomDatabase {
 
@@ -49,20 +47,30 @@ public abstract class FeedRoomDatabase extends RoomDatabase {
         }
         return INSTANCE;
     }
-    /**To delete all content and repopulate the database whenever the app is started - creates a callback*/
+    */
+/**To delete all content and repopulate the database whenever the app is started - creates a callback*//*
+
     private static RoomDatabase.Callback sRoomDatabaseCallback(final Context context) {
         return new RoomDatabase.Callback() {
-            @Override
+            */
+/*@Override
             public void onCreate(@NonNull SupportSQLiteDatabase db) {
                 super.onCreate(db);
-                /*Executors.newSingleThreadScheduledExecutor().execute(new Runnable() {
+                Executors.newSingleThreadScheduledExecutor().execute(new Runnable() {
                     @Override
                     public void run() {
-                        getDatabase(context).feedsDao().insertAll(loadJSON());
+                        loadJSON();
+                        getDatabase(context).feedsDao().insertAll(feedList);
                     }
-                });*/
-                /*getDatabase(context).feedsDao().insertAll(loadJSON());*/
-            }
+                });
+                *//*
+*/
+/*loadJSON();
+                getDatabase(context).feedsDao().insertAll(feedList);*//*
+*/
+/*
+            }*//*
+
 
             @Override
             public void onOpen(@NonNull SupportSQLiteDatabase db) {
@@ -71,14 +79,18 @@ public abstract class FeedRoomDatabase extends RoomDatabase {
             }
         };
     }
-    /**Delete all tables*/
+    */
+/**Delete all tables*//*
+
     public void clearDb() {
         if (INSTANCE != null) {
             new PopulateDbAsync(INSTANCE).execute();
         }
     }
-    /**Here is the code for the AsyncTask that deletes the contents of the database -
-     * relevant for populating it on create*/
+    */
+/**Here is the code for the AsyncTask that deletes the contents of the database -
+     * relevant for populating it on create*//*
+
     private static class PopulateDbAsync extends AsyncTask<Void, Void, Void> {
 
         private final FeedsDao mDao;
@@ -88,41 +100,122 @@ public abstract class FeedRoomDatabase extends RoomDatabase {
             mDao = db.feedsDao();
             mcDao = db.commentsDao();
         }
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            loadJSON();
+            //Perform pre-adding operation here.
+        }
 
         @Override
         protected Void doInBackground(final Void... params) {
             mDao.deleteAll();
             mcDao.deleteAllComment();
-            Executors.newSingleThreadScheduledExecutor().execute(new Runnable() {
+            */
+/*loadJSON();*//*
+
+            //mDao.insertAll(feedList);
+            */
+/*Executors.newSingleThreadScheduledExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
                     loadJSON();
-                    mDao.insertAll(feedList);
+                    *//*
+*/
+/*mDao.insertAll(feedList);*//*
+*/
+/*
+                    try {
+                        Thread.sleep(4000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-                });
+                });*//*
+
+            */
+/*if(feedList!=null)
+                mDao.insertAll(feedList);*//*
+
             // fetch videos from database here
-            /*Feed feed1 = new Feed("21:12","user#1", R.drawable.avatar_dog);
+            */
+/*Feed feed1 = new Feed("21:12","user#1", R.drawable.avatar_dog);
             final  int multiple = (int)mDao.insert(feed1);
             Comment comment = new Comment("UserA", multiple,"hey you","3:14");
             Comment comment2 = new Comment("UserB", multiple,"Whats up","11:15");
 
-            mcDao.insertComment(comment,comment2);*/
+            mcDao.insertComment(comment,comment2);*//*
+
             return null;
         }
+        @Override
+        protected void onPostExecute(Void result){
+            //if(feedList!=null)
+                //mDao.insertAll(feedList);
+
+        }
+        private Feed[] feedList;
+        private void loadJSON() {
+            FetchFeedApi apiInterface= RetrofitInstance.getRetrofitInstance().create(FetchFeedApi.class);
+            Call<List<Videos>> call=apiInterface.fetchVideo();
+            call.enqueue(new retrofit2.Callback<List<Videos>>() {
+                @Override
+                public void onResponse(Call<List<Videos>> call, Response<List<Videos>> response) {
+                    List<Videos> data = response.body();
+                    Log.d("Error","-----------"+data);
+                    if(data!=null){
+                        feedList = new Feed[data.size()];
+                        for(int i=0;i<data.size();i++){
+                            feedList[i] = new Feed(data.get(i).getCreated(), data.get(i).getvUid(), R.drawable.avatar_dog);
+                            feedList[i].setVidUri(data.get(i).getLocation());
+                        }
+                        */
+/* Log.d("Error","-----------"+feedList[0].getVidUri());*//*
+
+                        mDao.insertAll(feedList);
+                    }
+                }
+                @Override
+                public void onFailure(Call<List<Videos>> call, Throwable t) {
+                    Log.d("Error",t.getMessage());
+                }
+            });
 
     }
-    private static ArrayList<Videos> data;
-    private static Feed[] feedList;
+
+    */
+/*private static Feed[] feedList;
     private static void loadJSON() {
-        /**/
-        feedList = new Feed[30];
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://earwormfix.com")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        RestApi request = retrofit.create(RestApi.class);
-        Call<String> call = request.fetchVideo();
-        call.enqueue(new retrofit2.Callback<String>() {
+        VideoApi apiInterface= RetrofitInstance.getRetrofitInstance().create(VideoApi.class);
+        Call<List<Videos>> call=apiInterface.fetchVideo();
+        call.enqueue(new retrofit2.Callback<List<Videos>>() {
+            @Override
+            public void onResponse(Call<List<Videos>> call, Response<List<Videos>> response) {
+                List<Videos> data = response.body();
+                Log.d("Error","-----------"+data);
+                if(data!=null){
+                    feedList = new Feed[data.size()];
+                    for(int i=0;i<data.size();i++){
+                        feedList[i] = new Feed(data.get(i).getCreated(), data.get(i).getvUid(), R.drawable.avatar_dog);
+                        feedList[i].setVidUri(data.get(i).getLocation());
+                    }
+                   *//*
+*/
+/* Log.d("Error","-----------"+feedList[0].getVidUri());*//*
+*/
+/*
+                    mDao.insertAll(feedList);
+                }
+            }
+            @Override
+            public void onFailure(Call<List<Videos>> call, Throwable t) {
+                Log.d("Error",t.getMessage());
+            }
+        });*//*
+
+       */
+/* call.enqueue(new retrofit2.Callback<String>() {
             @Override
             public void onResponse(Call<String> call, Response<String> response) {
 
@@ -147,25 +240,35 @@ public abstract class FeedRoomDatabase extends RoomDatabase {
 
                 }
                 catch (JSONException e){e.printStackTrace();}
-                /*for(int i=0; i<30||i<data.size();i++) {
+                *//*
+*/
+/*for(int i=0; i<30||i<data.size();i++) {
                     Videos curr = data.get(i);
                     feedList[i] = new Feed(curr.getCreated(), curr.getvUid(), R.drawable.avatar_dog);
                     feedList[i].setVidUri(curr.getLocation());
 
                     //final int multiple = (int) mDao.insert(mFeed);
-                }*/
+                }*//*
+*/
+/*
 
-                    /*adapter = new DataAdapter(data);
-                recyclerView.setAdapter(adapter);*/
+                    *//*
+*/
+/*adapter = new DataAdapter(data);
+                recyclerView.setAdapter(adapter);*//*
+*/
+/*
             }
 
             @Override
             public void onFailure(Call<String> call, Throwable t) {
                 Log.d("Error",t.getMessage());
             }
-        });
+        });*//*
+
 
     }
 
 
 }
+*/

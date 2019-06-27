@@ -1,3 +1,4 @@
+/*
 package com.earwormfix.earwormfix.roomDB;
 
 import android.app.Application;
@@ -8,15 +9,19 @@ import android.os.AsyncTask;
 
 import com.earwormfix.earwormfix.Models.Comment;
 import com.earwormfix.earwormfix.Models.Feed;
+*/
 /**handles data operations. It provides a clean API to the rest of the app for app data
  * A Repository manages query threads and allows you to use multiple backends.
  * In the most common example, the Repository implements the logic for deciding whether
- * to fetch data from a network or use results cached in a local database*/
+ * to fetch data from a network or use results cached in a local database*//*
+
 public class FeedRepository {
     private FeedsDao mFeedDao;
     private CommentsDao mCommentsDao;
-    /*private LiveData<List<Comment>> mAllComments;
-    private LiveData<List<Feed>> mAllFeeds;*/
+    */
+/*private LiveData<List<Comment>> mAllComments;
+    private LiveData<List<Feed>> mAllFeeds;*//*
+
     private LiveData<PagedList<Comment>> mAllComments;
     private LiveData<PagedList<Feed>> mAllFeeds;
     //private   LiveData<List<String>> mAllUid;
@@ -29,12 +34,14 @@ public class FeedRepository {
         mAllFeeds = new LivePagedListBuilder<>(mFeedDao.getAllFeeds(), 30).build();
     }
 
-    /*public  LiveData<List<Feed>> getAllFeeds() {
+    */
+/*public  LiveData<List<Feed>> getAllFeeds() {
         return mAllFeeds;
     }
     public  LiveData<List<Comment>> getAllComments() {
         return mAllComments;
-    }*/
+    }*//*
+
     public  LiveData<PagedList<Feed>> getAllFeeds() {
         return mAllFeeds;
     }
@@ -82,3 +89,4 @@ public class FeedRepository {
         }
     }
 }
+*/

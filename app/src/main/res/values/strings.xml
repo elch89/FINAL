@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Earworm fix</string>
+    <string name="app_name">EarwormFix</string>
 
     <string name="title_activity_feeds">feeds</string>
     <string name="time_of_post">Time of post</string>
@@ -15,6 +15,8 @@
     <string name="cancel">CANCEL</string>
     <string name="dialog_message">Are you sure you whant to post this fix?</string>
     <string name="dialog_title">Confirmation</string>
+    <string name="friendsAlready">friends</string>
+    <string name="upload_pic">Upload picture</string>
 
     <!--<div>Icons made by <a href="https://www.flaticon.com/authors/gregor-cresnar" title="Gregor Cresnar">Gregor Cresnar</a> from <a href="https://www.flaticon.com/" 		    title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" 		    title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
     <div>Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" 		    title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" 		    title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>

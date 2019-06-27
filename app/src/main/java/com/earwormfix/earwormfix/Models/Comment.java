@@ -1,81 +1,56 @@
 package com.earwormfix.earwormfix.Models;
 
-import android.arch.persistence.room.ColumnInfo;
-import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.ForeignKey;
-import android.arch.persistence.room.Index;
-import android.arch.persistence.room.PrimaryKey;
-import android.support.annotation.NonNull;
+import com.google.gson.annotations.SerializedName;
 
 /**A comment can have only one feed relation*/
-@Entity(tableName = "comment_table",
-        foreignKeys = @ForeignKey(entity = Feed.class,
-                parentColumns = "fid",
-                childColumns = "feedId",
-                onDelete = ForeignKey.CASCADE),
-        indices = { @Index("feedId"), @Index("TOC")})
+
 public class Comment {
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "cid")
-    private int id;//unique id in table
-    /* User that comment was posted by*/
-    @ColumnInfo(name = "feedId")// Identification of related feed
-    private int feedId;
-    @NonNull
-    @ColumnInfo(name = "Comment")// The comment
-    private String comment;
-    @NonNull
-    @ColumnInfo(name = "TOC")// Time of comment
-    private String toc;
-
-    @ColumnInfo(name = "by")// Time of comment
-    private String by;
+    @SerializedName("pid")
+    private String pid; // post unique id
+    @SerializedName("uid")
+    private String uid;//unique id in table
+    @SerializedName("user_input")// The comment
+    private String user_input;
+    @SerializedName("created_at")// Time of comment
+    private String created_at;
 
 
-    public Comment(String by, int feedId, @NonNull String comment, @NonNull String toc){
-        this.comment = comment;
-        this.feedId = feedId;
-        this.toc = toc;
+    public Comment(String pid, String uid, String user_input, String created_at) {
+        this.uid = uid;
+        this.user_input = user_input;
+        this.created_at = created_at;
+        this.pid = pid;
     }
 
-    public int getId(){
-        return id;
-    }
-    @NonNull
-    public String getToc() {
-        return toc;
-    }
-    @NonNull
-    public String getComment() {
-        return comment;
+    public String getCreated_at() {
+        return created_at;
     }
 
-    @NonNull
-    public String getBy() {
-        return by;
+    public String getPid() {
+        return pid;
     }
 
-    public int getFeedId() {
-        return feedId;
+    public String getUid() {
+        return uid;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public String getUser_input() {
+        return user_input;
     }
 
-    public void setToc(@NonNull String toc) {
-        this.toc = toc;
+    public void setCreated_at(String created_at) {
+        this.created_at = created_at;
     }
 
-    public void setComment(@NonNull String comment) {
-        this.comment = comment;
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 
-    public void setFeedId(int feedId) {
-        this.feedId = feedId;
+    public void setUser_input(String user_input) {
+        this.user_input = user_input;
     }
 
-    public void setBy(String by) {
-        this.by = by;
+    public void setPid(String pid) {
+        this.pid = pid;
     }
 }

@@ -1,6 +1,5 @@
 package com.earwormfix.earwormfix.Adapters;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -16,11 +15,9 @@ public class CommentAdapter extends
         RecyclerView.Adapter<CommentViewHolder> {
     private List<Comment> items;
     private int resourceId;
-    private Context context;
 
     public CommentAdapter(int resourceId, List<Comment> items) {
         this.items = items;
-//        this.context = context;
         this.resourceId = resourceId;
 
     }
@@ -39,12 +36,10 @@ public class CommentAdapter extends
     @Override
     public void onBindViewHolder(@NonNull CommentViewHolder viewHolder, int position) {
         if(items!=null) {
-            Comment item = items.get(position);
-           /* if(item == null){
-                item = new Comment("1","There are no Comments to show","00:00:00");
+            if(items.get(position)!=null) {
+                Comment item = items.get(position);
+                viewHolder.bind(item);
             }
-            Log.d("Comment testing","id is:"+item.getId());*/
-            viewHolder.bind(item);
 
         }
 
@@ -55,10 +50,6 @@ public class CommentAdapter extends
         return items.size();
     }
 
-    public void setFeeds(List<Comment> comments){
-        items = comments;
-        notifyDataSetChanged();
-    }
 
 
 }

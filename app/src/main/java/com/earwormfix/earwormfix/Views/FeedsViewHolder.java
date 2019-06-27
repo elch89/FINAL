@@ -1,5 +1,6 @@
 package com.earwormfix.earwormfix.Views;
 
+import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -9,10 +10,19 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.earwormfix.earwormfix.GlideApp;
 import com.earwormfix.earwormfix.Models.Feed;
 import com.earwormfix.earwormfix.R;
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import im.ene.toro.ToroPlayer;
 import im.ene.toro.ToroUtil;
@@ -21,45 +31,83 @@ import im.ene.toro.media.PlaybackInfo;
 import im.ene.toro.widget.Container;
 //@SuppressWarnings("WeakerAccess")
 public class FeedsViewHolder extends RecyclerView.ViewHolder implements ToroPlayer, View.OnClickListener {
-    private static final String VIDEO_SAMPLE = "tacoma_narrows";
     private static final String FIXED_ICON = "Fixed";
 
     protected final PlayerView playerView;
     private ItemClickListener clickListener;
     protected ExoPlayerViewHelper helper;
     private Uri videoUri;
-    private TextView pDate,userId;
+    private TextView pDate,userId, desc;
     private ImageView userAvatar;
+    private AspectRatioFrameLayout aspectRatioFrameLayout;
+    private Context context;
 
     /////
     public RecyclerView comments;
-    private TextView btnComment ,mFixed;
-    public FeedsViewHolder(ViewGroup parent, LayoutInflater inflater, int layoutRes, ItemClickListener mListener) {
+    private TextView btnComment ,mFixed, addToList;
+    public FeedsViewHolder(ViewGroup parent, LayoutInflater inflater, int layoutRes,Context context, ItemClickListener mListener) {
         super(inflater.inflate(layoutRes, parent, false));
         clickListener = mListener;
+        this.context=context;
+        aspectRatioFrameLayout = itemView.findViewById(R.id.videoView);
         playerView = itemView.findViewById(R.id.playerView);
         pDate = itemView.findViewById(R.id.post_date);
+        desc = itemView.findViewById(R.id.describe_vid);
         userId = itemView.findViewById(R.id.user_id);
         comments = itemView.findViewById(R.id.comment_recycler_view);
         userAvatar = itemView.findViewById(R.id.icon_poster);
-
+        addToList = itemView.findViewById(R.id.add_to_list);
         mFixed = itemView.findViewById(R.id.thumbs_up);
         btnComment =  itemView.findViewById(R.id.cmd_comment);
 
+        // Volume control mute/un mute
+
+        ImageView volumeOff =itemView.findViewById(R.id.exo_volume_off);
+        ImageView volumeOn = itemView.findViewById(R.id.exo_volume_up);
+        volumeOn.setVisibility(View.INVISIBLE);
+        volumeOff.setOnClickListener(v -> {
+            if(helper!=null){
+                helper.setVolume(0f);
+                volumeOn.setVisibility(View.VISIBLE);
+                volumeOff.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        volumeOn.setOnClickListener(v -> {
+            if(helper!=null) {
+                helper.setVolume(0.75f);
+                volumeOn.setVisibility(View.INVISIBLE);
+                volumeOff.setVisibility(View.VISIBLE);
+            }
+        });
+
+        addToList.setOnClickListener(this);
         btnComment.setOnClickListener(this);
         mFixed.setOnClickListener(this);
+        aspectRatioFrameLayout.setAspectRatio(4f/3f);
 
     }
 
      public void bind(Feed item) {
-        String mediaName = item.getVidUri();//"https://earwormfix.com/post/123/20190529_130707.mp4";// item.getVid()
-        videoUri = Uri.parse(mediaName);//"file:///android_asset/video/video.mp4"
-        pDate.setText(item.getTop());
+        String baseUrl ="https://earwormfix.com/";
+        String mediaName = baseUrl.concat(item.getUrl());//"https://earwormfix.com/post/123/20190529_130707.mp4";//
+        videoUri = Uri.parse(mediaName);
+        pDate.setText(convertStrDate(item.getCreated_at()));
         if(item.getFixed()>0){
             mFixed.setText(String.format("%s  %s", FIXED_ICON, String.valueOf(item.getFixed())));
         }
-        userAvatar.setImageResource(item.getProfile_pic());
-        userId.setText(item.getUid());
+        else {
+            mFixed.setText(String.format("%s", FIXED_ICON));
+        }
+        desc.setText(item.getDescription());
+        if(item.getProfPic().equals("0")){
+            userAvatar.setImageResource(R.drawable.avatar_dog);
+        }
+        else{
+            GlideApp.with(context).asBitmap().load(baseUrl+item.getProfPic()).into(userAvatar);
+        }
+
+        userId.setText(item.getName());
 
 
     }
@@ -122,7 +170,31 @@ public class FeedsViewHolder extends RecyclerView.ViewHolder implements ToroPlay
 
                 clickListener.onFixClick(view,getAdapterPosition());
             }
+            else if(view.getId() == R.id.add_to_list){
+                clickListener.onSubmitEdit(view,getAdapterPosition());
+            }
         }
+    }
+
+    // Changes the format of date from database
+    private String convertStrDate(String timeDate){
+        DateFormat frmtIn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        DateFormat frmtOut = new SimpleDateFormat("dd/MM/yy HH:mm");
+        DateFormat frmtEdit = new SimpleDateFormat("HH:mm");
+        Calendar now = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jerusalem"));
+        Calendar cal = Calendar.getInstance();
+        try {
+            Date date = frmtIn.parse(timeDate);
+            cal.setTime(date);
+
+            if(now.get(Calendar.DATE)== cal.get(Calendar.DATE) ){
+                return "Today at " + frmtEdit.format(date);
+            }
+            return frmtOut.format(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return "Not available";
     }
 
 }

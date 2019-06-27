@@ -7,8 +7,8 @@ import android.text.TextUtils;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
-import com.earwormfix.earwormfix.Rest.RestApi;
-import com.earwormfix.earwormfix.Rest.RestApiFactory;
+import com.earwormfix.earwormfix.Rest.FetchFeedApi;
+import com.earwormfix.earwormfix.Rest.FetchFeedApiFactory;
 
 import io.reactivex.Scheduler;
 import io.reactivex.schedulers.Schedulers;
@@ -20,14 +20,16 @@ public class AppController extends Application {
     public static final String TAG = AppController.class.getSimpleName();
 
     private RequestQueue mRequestQueue;
-    private RestApi restApi;
+    private FetchFeedApi restApi;
     private Scheduler scheduler;
 
     private static AppController mInstance;
+    private static Context context;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        AppController.context = getApplicationContext();
         mInstance = this;
     }
 
@@ -61,19 +63,22 @@ public class AppController extends Application {
     private static AppController get(Context context) {
         return (AppController) context.getApplicationContext();
     }
+    public static Context getAppContext() {
+        return AppController.context;
+    }
 
     public static AppController create(Context context) {
         return AppController.get(context);
     }
 
-    public RestApi getRestApi() {
+    public FetchFeedApi getRestApi() {
         if(restApi == null) {
-            restApi = RestApiFactory.create();
+            restApi = FetchFeedApiFactory.create();
         }
         return restApi;
     }
 
-    public void setRestApi(RestApi restApi) {
+    public void setRestApi(FetchFeedApi restApi) {
         this.restApi = restApi;
     }
 

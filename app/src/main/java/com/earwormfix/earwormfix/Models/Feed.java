@@ -1,79 +1,146 @@
 package com.earwormfix.earwormfix.Models;
 
-import android.arch.persistence.room.ColumnInfo;
-import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.Index;
-import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
+import android.support.v7.util.DiffUtil;
+
+import com.google.gson.annotations.SerializedName;
 
 /** Creates a 'entity' or object description to save in database
  * A feed has many comments relation*/
-@Entity(tableName = "feed_table",
-        indices = {@Index(value = "uid", unique = true)})
 public class Feed  {
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "fid")
-    private int id; // table unique id
-    @NonNull
-    @ColumnInfo(name = "video")
-    private String vidUri;
-    @NonNull
-    @ColumnInfo(name = "top")
-    private String top;// Time of post
-    @NonNull
-    @ColumnInfo(name = "uid")
+    @SerializedName("id")
+    private int id;
+    @SerializedName("pid")
+    private String pid; // post unique id
+    @SerializedName("description")
+    private String description;
+    @SerializedName("url")
+    private String url;
+    @SerializedName("uid")
     private String uid; // User unique id
-    @ColumnInfo(name = "fixed")
+    @SerializedName("length")
+    private String length;// Time of post
+    @SerializedName("fixed")
     private int fixed;
-    @ColumnInfo(name = "profile_pic")
-    private int profile_pic;
+    @SerializedName("created_at")
+    private String created_at;
+    @SerializedName("thumbnail")
+    private String thumbnail;
+    @SerializedName("name")
+    private String name;
+    @SerializedName("photo")
+    private String profPic;
+    @SerializedName("comments")
+    private Comment[] comments;
+    @SerializedName("error")
+    private boolean error;
+    @SerializedName("error_msg")
+    private String errMsg;
 
-/** @Ignore for adding fields that will not be added to table*/
-    public Feed(@NonNull String top,@NonNull String uid, int profile_pic){
 
-        this.profile_pic = profile_pic;
-        this.vidUri = "0";
-        this.fixed = 0;
-        this.top = top;
+    public Feed(int id, String pid,String description, String url, String uid, String length,
+                int fixed, String created_at,String thumbnail,
+                String name,Comment[] comments, String profPic,boolean error,String errMsg){
+        this.profPic = profPic;
+        this.errMsg =errMsg;
+        this.error = error;
+        this.id = id;
+        this.pid = pid;
+        this.description = description;
+        this.fixed = fixed;
+        this.url = url;
         this.uid = uid;
+        this.comments = comments;
+        this.created_at = created_at;
+        this.length = length;
+        this.thumbnail = thumbnail;
+        this.name = name;
+    }
+    public String getErrMsg() {
+        return errMsg;
     }
 
+    public boolean isError() {
+        return error;
+    }
 
     public int getId() {
         return id;
+    }
+
+    public String getProfPic() {
+        return profPic;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getLength() {
+        return length;
+    }
+
+    public Comment[] getComments() {
+        return comments;
+    }
+
+    public String getCreated_at() {
+        return created_at;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getPid() {
+        return pid;
+    }
+
+    public String getUrl() {
+        return url;
     }
 
     public int getFixed() {
         return fixed;
     }
 
-    @NonNull
-    public String getTop() {
-        return top;
+    public String getThumbnail() {
+        return thumbnail;
     }
-    @NonNull
+
+    public String getName() {
+        return name;
+    }
+
     public String getUid() {
         return uid;
     }
-    @NonNull
-    public String getVidUri(){
-        return vidUri;
+
+    public void setLength(String length) {
+        this.length = length;
     }
 
-    public int getProfile_pic() {
-        return profile_pic;
+    public void setComments(Comment[] comments) {
+        this.comments = comments;
     }
 
-
-    public void setId(int myId) {
-        this.id = myId;
+    public void setCreated_at(String created_at) {
+        this.created_at = created_at;
     }
 
-    public void setTop(@NonNull String top) {
-        this.top = top;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public void setUid(@NonNull String uid) {
+    public void setPid(String pid) {
+        this.pid = pid;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void setUid(String uid) {
         this.uid = uid;
     }
 
@@ -81,15 +148,40 @@ public class Feed  {
         this.fixed = fixed;
     }
 
-    public void setVidUri(@NonNull String vidUri) {
-        this.vidUri = vidUri;
+    public void setThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
     }
 
-    public void incrementFixed(){
-        this.fixed += 1;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public void setProfile_pic(int profile_pic) {
-        this.profile_pic = profile_pic;
+    public void setProfPic(String profPic) {
+        this.profPic = profPic;
+    }
+
+    public static final DiffUtil.ItemCallback<Feed> CALLBACK = new DiffUtil.ItemCallback<Feed>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull Feed feeds, @NonNull Feed t1) {
+            return feeds.id == t1.id;
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull Feed feeds, @NonNull Feed t1) {
+            return feeds.equals(t1);
+        }
+        /*@Override
+        public Feed getChangePayload(@NonNull Feed f1,@NonNull Feed f2){
+            return (Feed) super.getChangePayload(f1,f2);
+        }*/
+    };
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        Feed feed = (Feed) obj;
+
+        return this.id == feed.id ;
     }
 }

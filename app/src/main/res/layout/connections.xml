@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:backgroundTint="#99000000"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="4dp"
+    app:cardElevation="2dp"
+    app:cardUseCompatPadding="true"
+    android:paddingBottom="13dp"
+    android:paddingTop="13dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <android.support.v7.widget.CardView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="24dp"
+            android:layout_margin="5dp"
+            android:elevation="10dp">
+            <ImageView
+                android:id="@+id/imgAvatar"
+                android:layout_width="70dip"
+                android:layout_height="70dip"
+                android:scaleType="fitCenter"
+                android:layout_gravity="center"
+                android:src="@drawable/avatar_girl"
+                />
+        </android.support.v7.widget.CardView>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            >
+            <TextView
+                android:id="@+id/name_fr"
+                android:layout_width="match_parent"
+                android:gravity="center"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorWhite"
+                android:textSize="16sp"
+                android:padding="4sp"
+                android:fontFamily="@font/averia_serif_libre_bold_italic"
+                android:text="TextView" />
+
+            <TextView
+                android:gravity="center"
+                android:id="@+id/nickname_fr"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorWhite"
+                android:fontFamily="@font/averia_serif_libre_bold_italic"
+                android:textSize="20sp"
+                android:padding="4sp"
+                android:text="TextView" />
+
+            <TextView
+                android:gravity="center"
+                android:id="@+id/email_fr"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorWhite"
+                android:fontFamily="@font/averia_serif_libre_bold_italic"
+                android:text="TextView"
+                android:textSize="14sp"
+                android:padding="4sp"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/add_friend"
+            android:layout_width="50dp"
+            android:layout_gravity="center"
+            android:layout_height="50dp"
+            android:textColor="#000000"
+            android:textSize="12sp"
+            android:background="@drawable/custom_button"
+            android:shadowColor="#fd662c"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="7"
+            android:layout_marginStart="6sp"
+            android:layout_marginEnd="6sp"
+            android:text="+" />
+    </LinearLayout>
+</android.support.v7.widget.CardView>

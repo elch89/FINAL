@@ -18,8 +18,8 @@ import com.android.volley.toolbox.StringRequest;
 import com.earwormfix.earwormfix.AppConfig;
 import com.earwormfix.earwormfix.AppController;
 import com.earwormfix.earwormfix.R;
-import com.earwormfix.earwormfix.helper.SQLiteHandler;
-import com.earwormfix.earwormfix.helper.SessionManager;
+import com.earwormfix.earwormfix.helpers.SQLiteHandler;
+import com.earwormfix.earwormfix.helpers.SessionManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,18 +40,19 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         PACKAGE_NAME = getApplicationContext().getPackageName();
-
+        /**/
+        /*initialise views*/
         TextView regScreen = (TextView) findViewById(R.id.link_to_register);
         Button login = (Button) findViewById(R.id.btnLogin);
 
         inputEmail = findViewById(R.id.email);
         inputPassword = findViewById(R.id.password);
 
-        // Listeners
+        // set listeners for register redirect and feeds redirect
         regScreen.setOnClickListener(this);
         login.setOnClickListener(this);
 
-        // Progress dialog
+        // Progress dialog initialise
         pDialog = new ProgressDialog(this);
         pDialog.setCancelable(false);
 
@@ -60,7 +61,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         // Session manager
         session = new SessionManager(getApplicationContext());
-
+        Log.e("alreadyLoggedInn","   "+session.isLoggedIn());
         // Check if user is already logged in or not
         if (session.isLoggedIn()) {
             // User is already logged in. Take him to main activity
@@ -88,9 +89,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             }
         }
         if(v.getId() == R.id.link_to_register) {
+            // Start activity without closing
             Intent intent_r = new Intent(getApplicationContext(), RegisterActivity.class);
             startActivity(intent_r);
-            finish();
+            //finish();
         }
 
 
@@ -131,12 +133,16 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         JSONObject user = jObj.getJSONObject("user");
                         String name = user.getString("name");
                         String email = user.getString("email");
-                        String created_at = user
-                                .getString("created_at");
+                        String full_name = user.getString("full_name");
+                        String phone = user.getString("phone");
+                        String gender = user.getString("gender");
+                        String birth = user.getString("birth");
+                        String genre = user.getString("genre");
+                        String photo = user.getString("photo");
+                        String created_at = user.getString("created_at");
 
                         // Inserting row in users table
-                        db.addUser(name, email, uid, created_at);
-                        fetchProfile(email);
+                        db.addUser(uid,name, email, full_name, phone, gender, birth, genre,photo, created_at);
                         // Launch main activity
                         Intent intent = new Intent(LoginActivity.this,
                                 FeedsActivity.class);
@@ -197,81 +203,4 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         if (pDialog.isShowing())
             pDialog.dismiss();
     }
-
-    // Fetch user profile:
-    private void fetchProfile(final String email){
-        // Tag used to cancel the request
-        String tag_string_req = "req_profile";
-
-        showDialog();
-        StringRequest strReq = new StringRequest(Request.Method.POST,
-                AppConfig.URL_PROFILE, new Response.Listener<String>() {
-
-            @Override
-            public void onResponse(String response) {
-                hideDialog();
-                try {
-                    JSONObject jObj = new JSONObject(response);
-                    boolean error = jObj.getBoolean("error");
-                    if (!error) {
-                        // User successfully stored in MySQL
-                        // Now store the user in sqlite
-                        String uid = jObj.getString("uid");
-
-                        JSONObject user = jObj.getJSONObject("profile");
-                        String full_name = user.getString("full_name");
-                        String email = user.getString("email");
-                        String phone = user.getString("phone");
-                        String gender = user.getString("gender");
-                        String birth = user.getString("birth");
-                        String genre = user.getString("genre");
-                        String avatar = user.getString("avatar");
-
-
-                        String created_at = user
-                                .getString("created_at");
-
-                        // Inserting row in profiles table
-                        db.addProfile(full_name, email, phone, gender, birth, genre, avatar, uid, created_at);
-
-                    } else {
-
-                        // Error occurred in fetch. Get the error message
-                        String errorMsg = jObj.getString("error_msg");
-                        Toast.makeText(getApplicationContext(),
-                                errorMsg, Toast.LENGTH_LONG).show();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        }, new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getApplicationContext(),
-                        error.getMessage(), Toast.LENGTH_LONG).show();
-
-                hideDialog();
-            }
-        }) {
-
-            @Override
-            protected Map<String, String> getParams() {
-                // Posting params to register url
-                Map<String, String> params = new HashMap<String, String>();
-                params.put("email", email);
-
-                return params;
-            }
-
-        };
-
-        // Adding request to request queue
-        AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
-
-    }
-
-
 }

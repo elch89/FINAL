@@ -1,64 +1,52 @@
 package com.earwormfix.earwormfix.Adapters;
 
 import android.app.Application;
+import android.arch.core.util.Function;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Transformations;
+import android.arch.paging.LivePagedListBuilder;
 import android.arch.paging.PagedList;
+import android.support.annotation.NonNull;
 
-import com.earwormfix.earwormfix.Models.Comment;
+import com.earwormfix.earwormfix.FeedDataSource;
 import com.earwormfix.earwormfix.Models.Feed;
-import com.earwormfix.earwormfix.roomDB.FeedRepository;
+import com.earwormfix.earwormfix.Models.FeedDataSourceFactory;
+import com.earwormfix.earwormfix.Utilitties.NetworkState;
 
-/**The ViewModel's role is to provide data to the UI and survive configuration changes.
- * A ViewModel acts as a communication center between the Repository and the UI.
- * You can also use a ViewModel to share data between fragments
- * For both comments and feeds!!*/
+import java.util.Objects;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 public class FeedViewModel extends AndroidViewModel {
-    /*private FeedRepository mRepository;
-    ////
+    FeedDataSourceFactory feedDataSourceFactory;
+    //MutableLiveData<FeedDataSource> dataSourceMutableLiveData;
+    Executor executor;
+    LiveData<PagedList<Feed>> pagedListLiveData;
+    LiveData<NetworkState> networkState;
+    LivePagedListBuilder<Integer,Feed> builder;
 
-    private LiveData<List<Feed>> mAllFeeds;
-    /////
-    private LiveData<List<Comment>> mAllComments;
-    //private LiveData<List<String>> mCommentsUid;
-
-    public FeedViewModel (Application application) {
+    public FeedViewModel(@NonNull Application application) {
         super(application);
-        mRepository = new FeedRepository(application);
-        mAllFeeds = mRepository.getAllFeeds();
-        /////
-        mAllComments = mRepository.getAllComments();
-        //mCommentsUid = mRepository.getCommentsUid();
+        feedDataSourceFactory = new FeedDataSourceFactory();
+        //dataSourceMutableLiveData = feedDataSourceFactory.getMutableLiveData();
+        networkState = Transformations.switchMap(feedDataSourceFactory.getMutableLiveData(),
+                (Function<FeedDataSource, LiveData<NetworkState>>) FeedDataSource::getNetworkState);
+        PagedList.Config config = (new PagedList.Config.Builder()).
+                setEnablePlaceholders(false).
+                setInitialLoadSizeHint(5).setPageSize(5).setPrefetchDistance(2).build();
+        executor = Executors.newFixedThreadPool(5);//.setNotifyExecutor(executor)
+        builder = new LivePagedListBuilder<Integer,Feed>(feedDataSourceFactory,config);
+        pagedListLiveData = builder.setFetchExecutor(executor).build();
     }
-
-    public LiveData<List<Feed>> getAllFeeds() { return mAllFeeds; }
-
-    public void insert(Feed feed) { mRepository.insert(feed); }
-    //----Comments part-----//
-    public LiveData<List<Comment>> getAllComments() { return mAllComments; }
-    //public LiveData<List<String>> getCommentsUid() { return mCommentsUid;}
-    public void insertComment(Comment comment) { mRepository.insertComment(comment); }*/
-
-/*************************************PAGING**********************************************/
-
-    private FeedRepository mRepository;
-
-    public final LiveData<PagedList<Feed>> mAllFeeds;
-    public final LiveData<PagedList<Comment>> mAllComments;
-
-    public void insert(Feed feed) { mRepository.insert(feed); }
-    public void insertComment(Comment comment) { mRepository.insertComment(comment); }
-
-
-    public FeedViewModel (Application application) {
-        super(application);
-        mRepository = new FeedRepository(application);
-        mAllFeeds = mRepository.getAllFeeds();
-        mAllComments = mRepository.getAllComments();
-
+    public LiveData<PagedList<Feed>> getPagedListLiveData() {
+        return pagedListLiveData;
     }
-    public LiveData<PagedList<Feed>> getAllFeeds() { return mAllFeeds; }
-    public LiveData<PagedList<Comment>> getAllComments() { return mAllComments; }
-
+    public LiveData<NetworkState> getNetworkState() {
+        return networkState;
+    }
+    public void refresh() {
+        Objects.requireNonNull(pagedListLiveData.getValue()).getDataSource().invalidate();
+    }
 
 }

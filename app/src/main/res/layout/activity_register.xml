@@ -5,13 +5,13 @@
     android:fillViewport="true">
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:background="#fff">
+        android:layout_height="wrap_content" android:background="@color/lightBlue">
 
         <!--  Header  Starts-->
         <LinearLayout android:id="@+id/header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/header_gradient"
+
             android:paddingTop="5dip"
             android:orientation="vertical"
             android:paddingBottom="5dip">
@@ -21,14 +21,10 @@
                 android:layout_height="wrap_content"
                 android:adjustViewBounds="true"
                 android:contentDescription="logo"
-                android:src="@drawable/twitter_header_photo_1" />
-            <!-- Logo Ends -->
-
-            <!--  Header Ends -->
-
-            <!-- Registration Form -->
+                android:src="@drawable/ewf_bg_blue" />
             <LinearLayout
                 xmlns:android="http://schemas.android.com/apk/res/android"
+                android:background="@drawable/header_gradient"
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -37,6 +33,7 @@
                 <!-- Full Name Label -->
                 <TextView
                     android:layout_width="fill_parent"
+                    android:fontFamily="@font/averia_serif_libre_bold_italic"
                     android:layout_height="wrap_content"
                     android:text="User Name"
                     android:textColor="#372c24" />
@@ -45,9 +42,11 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dip"
                     android:singleLine="true"
-                    android:layout_marginBottom="20dip"/>
+                    android:layout_marginBottom="20dip"
+                    android:inputType="textPersonName"/>
                 <!--  Email Label -->
                 <TextView android:layout_width="match_parent"
+                    android:fontFamily="@font/averia_serif_libre_bold_italic"
                     android:layout_height="wrap_content"
                     android:textColor="#372c24"
                     android:text="Email"/>
@@ -56,9 +55,11 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dip"
                     android:singleLine="true"
+                    android:inputType="textEmailAddress"
                     android:layout_marginBottom="20dip"/>
                 <!-- Password Label -->
                 <TextView android:layout_width="match_parent"
+                    android:fontFamily="@font/averia_serif_libre_bold_italic"
                     android:layout_height="wrap_content"
                     android:textColor="#372c24"
                     android:text="Password"/>
@@ -66,13 +67,22 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:singleLine="true"
-                    android:layout_marginTop="5dip"/>
+                    android:layout_marginTop="5dip"
+                    android:inputType="textPassword"/>
                 <!-- Register Button -->
                 <Button
                     android:id="@+id/btnRegister"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="10dip"
+                    android:fontFamily="@font/averia_serif_libre_bold_italic"
+                    android:textColor="#000000"
+                    android:textSize="25sp"
+                    android:background="@drawable/custom_button"
+                    android:shadowColor="#fd662c"
+                    android:shadowDx="0"
+                    android:shadowDy="0"
+                    android:shadowRadius="5"
                     android:text="Register New Account" />
                 <!-- Link to Login Screen -->
                 <TextView android:id="@+id/link_to_login"
@@ -81,9 +91,10 @@
                     android:layout_marginTop="40dip"
                     android:layout_marginBottom="40dip"
                     android:text="Already have account? Login here"
+                    android:fontFamily="@font/averia_serif_libre_bold_italic"
                     android:gravity="center"
                     android:textSize="20dip"
-                    android:textColor="#025f7c"/>
+                    android:textColor="#fd662c"/>
             </LinearLayout>
         </LinearLayout>
     </RelativeLayout>

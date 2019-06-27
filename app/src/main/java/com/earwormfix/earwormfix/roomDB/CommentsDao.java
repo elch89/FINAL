@@ -1,3 +1,4 @@
+/*
 package com.earwormfix.earwormfix.roomDB;
 
 import android.arch.lifecycle.LiveData;
@@ -16,8 +17,10 @@ import java.util.List;
 public interface CommentsDao {
     @Query("SELECT * from comment_table ORDER BY TOC DESC")
     DataSource.Factory<Integer, Comment> getAllComments();
-    /*@Query("SELECT * from comment_table ORDER BY TOC DESC")
-    LiveData<List<Comment>> getAllComments();*/
+    */
+/*@Query("SELECT * from comment_table ORDER BY TOC DESC")
+    LiveData<List<Comment>> getAllComments();*//*
+
 
     @Query("SELECT feedId FROM comment_table")
     LiveData<List<Integer>> getAllFeedIds();
@@ -31,3 +34,4 @@ public interface CommentsDao {
     @Query("DELETE FROM comment_table")
     void deleteAllComment();
 }
+*/

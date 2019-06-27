@@ -5,8 +5,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
-import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -17,41 +17,48 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.VideoView;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.earwormfix.earwormfix.R;
-import com.earwormfix.earwormfix.Rest.ResultObject;
-import com.earwormfix.earwormfix.Rest.VideoUploadApi;
-import com.earwormfix.earwormfix.helper.SQLiteHandler;
+import com.earwormfix.earwormfix.Rest.AddFeedIntentService;
+import com.earwormfix.earwormfix.helpers.SQLiteHandler;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
+import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
 
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 import pub.devrel.easypermissions.EasyPermissions;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 /** An activity to add feeds */
 public class AddFeed extends AppCompatActivity implements EasyPermissions.PermissionCallbacks{
     private static final String TAG = AddFeed.class.getSimpleName();
     private static final int REQUEST_VIDEO_CAPTURE = 300;
     private static final int READ_REQUEST_CODE = 200;
+    private static final int WRITE_REQUEST_CODE = 100;
     private static final int SELECT_VIDEO = 1;
+    private TextView txtView;
     private Uri uri;
     private String pathToStoredVideo;
-    private VideoView displayRecordedVideo;
+    private SimpleExoPlayer displayRecordedVideo;
+    private PlayerView playerView;
     private String selectedVideoPath;
-    private static final String SERVER_PATH = "https://earwormfix.com";
+    private AspectRatioFrameLayout aspectRatioFrameLayout;
 
+    private Button btnSave, captureVideoButton, loadFromDevice;
+    private ProgressBar pDialog;
     SQLiteHandler db;
-
+    private String generatedFilename;
     private EditText mSaySomething;
 
 
@@ -59,21 +66,55 @@ public class AddFeed extends AppCompatActivity implements EasyPermissions.Permis
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feeds_add);
+
+        pDialog = findViewById(R.id.pBar);
+        txtView = (TextView) findViewById(R.id.tView);
+        aspectRatioFrameLayout = findViewById(R.id.videoView1);
         mSaySomething = findViewById(R.id.say_something);
-        displayRecordedVideo = (VideoView)findViewById(R.id.video_display);
-        final Button captureVideoButton = (Button)findViewById(R.id.capture_video);
-        final Button loadFromDevice = findViewById(R.id.upload_video);
+        playerView = findViewById(R.id.video_display);
+
+        captureVideoButton = (Button)findViewById(R.id.capture_video);
+        loadFromDevice = findViewById(R.id.upload_video);
+        btnSave = findViewById(R.id.button_save);
+        // sqlite handler
         db = new SQLiteHandler(this);
+        // Volume control mute/un mute
+
+        ImageView volumeOff =findViewById(R.id.exo_volume_off);
+        ImageView volumeOn = findViewById(R.id.exo_volume_up);
+        volumeOn.setVisibility(View.INVISIBLE);
+        volumeOff.setOnClickListener(v -> {
+            if(displayRecordedVideo!=null){
+                displayRecordedVideo.setVolume(0f);
+                volumeOn.setVisibility(View.VISIBLE);
+                volumeOff.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        volumeOn.setOnClickListener(v -> {
+            if(displayRecordedVideo!=null) {
+                displayRecordedVideo.setVolume(0.75f);
+                volumeOn.setVisibility(View.INVISIBLE);
+                volumeOff.setVisibility(View.VISIBLE);
+            }
+        });
+
+        /**
+         * Button listeners
+         * */
+        // take video from device
         captureVideoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // ask for permission to take video from device
                 Intent videoCaptureIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
                 if(videoCaptureIntent.resolveActivity(getPackageManager()) != null){
+                    /*Log.e(TAG,"access granted activity result"+videoCaptureIntent.resolveActivity(getPackageManager()).flattenToString());*/
                     startActivityForResult(videoCaptureIntent, REQUEST_VIDEO_CAPTURE);
                 }
             }
         });
+        // from memory
         loadFromDevice.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -83,47 +124,41 @@ public class AddFeed extends AppCompatActivity implements EasyPermissions.Permis
                 }
             }
         });
-
-
-
-        final Button button = findViewById(R.id.button_save);
-        button.setOnClickListener(new View.OnClickListener() {
+        // Save selected and post
+        btnSave.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-
+                // Construct a new Alert Dialog box
                 AlertDialog.Builder builder = new AlertDialog.Builder(AddFeed.this);
-
-                // Add the buttons
+                // Add the buttons, positive/negetive
                 builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        Intent replyIntent = new Intent();
+                        //Intent replyIntent = new Intent();
                         // User clicked OK button
                         if(pathToStoredVideo == null) {
                             Log.e("error","selected video path = null!");
-
+                            Toast.makeText(getApplicationContext(),"NO VIDEO WAS SELECTED",Toast.LENGTH_LONG).show();
                         } else {
-                            /** send to server
-                             * selectedVideoPath is path to the selected video
+                            /**
+                             * send to server via service
+                             * #pathToStoredVideo is path to video we want to upload i.e input
+                             * #selectedVideoPath is path to the compressed video i.e output
                              */
-                            //Store the video to server
-
-                            uploadVideoToServer(pathToStoredVideo);
-
-                            // send intent with video id?
-                            String word = mSaySomething.getText().toString();
-                            replyIntent.putExtra("uid", word);
-                            setResult(RESULT_OK, replyIntent);
-                            //}
+                            selectedVideoPath = getFileDestinationPath();
+                            Intent intent = new Intent(AddFeed.this, AddFeedIntentService.class);
+                            intent.setAction(AddFeedIntentService.COMPRESS);
+                            intent.putExtra("path_to_vid", pathToStoredVideo);
+                            intent.putExtra("path_to_destination", selectedVideoPath);
+                            intent.putExtra("mSaySomething", mSaySomething.getText().toString());
+                            intent.putExtra("generatedFilename", generatedFilename);
+                            startService(intent);
                             finish();
+
                         }
-
-
-
                     }
                 });
-                builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        // User cancelled the dialog
-                    }
+                builder.setNegativeButton(R.string.cancel, (dialog, id) -> {
+                    // User cancelled the dialog
+                    //dialog.dismiss();
                 });
                 // Set message to display
                 builder.setMessage(R.string.dialog_message)
@@ -131,61 +166,44 @@ public class AddFeed extends AppCompatActivity implements EasyPermissions.Permis
                 // Create dialog
                 AlertDialog dialog = builder.create();
                 dialog.show();
-                //if (TextUtils.isEmpty(mEditWordView.getText()))
-                 //   setResult(RESULT_CANCELED, replyIntent);
             }
         });
     }
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(resultCode == Activity.RESULT_OK  ){
-            if (requestCode == SELECT_VIDEO) {
-                pathToStoredVideo = getDevicePath(data.getData());
 
-                /*try {*/
-                    /*if(selectedVideoPath == null) {
-                        Log.e("error","selected video path = null!");
-                        finish();
-                    } else {
-                        *//**
-                         * try to do something there - send to server
-                         * selectedVideoPath is path to the selected video
-                         *//*
-                        uploadVideoToServer(selectedVideoPath);
-                    }*/
-                /*} catch (IOException e) {
-                    //#debug
-                    e.printStackTrace();
-                }*/
-            }
-            else if(requestCode == REQUEST_VIDEO_CAPTURE){
+        if(resultCode == Activity.RESULT_OK  ){
+
+            if(requestCode == REQUEST_VIDEO_CAPTURE || requestCode == SELECT_VIDEO){
                 uri = data.getData();
-                if (EasyPermissions.hasPermissions(AddFeed.this, android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                    displayRecordedVideo.setVideoURI(uri);
-                    displayRecordedVideo.start();
+
+                if (EasyPermissions.hasPermissions(AddFeed.this, android.Manifest.permission.READ_EXTERNAL_STORAGE)&
+                        EasyPermissions.hasPermissions(AddFeed.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    /*displayRecordedVideo.setVideoURI(uri);
+                    displayRecordedVideo.start();*/
+                    initializePlayer();
 
                     pathToStoredVideo = getRealPathFromURIPath(uri, AddFeed.this);
                     Log.d(TAG, "Recorded Video Path " + pathToStoredVideo);
-                    //Store the video to server
-                    //uploadVideoToServer(pathToStoredVideo);
-
                 } else {
                     EasyPermissions.requestPermissions(AddFeed.this, getString(R.string.read_file), READ_REQUEST_CODE, Manifest.permission.READ_EXTERNAL_STORAGE);
+                    EasyPermissions.requestPermissions(AddFeed.this, getString(R.string.read_file), WRITE_REQUEST_CODE, Manifest.permission.WRITE_EXTERNAL_STORAGE);
                 }
             }
         }
     }
+    // This actually sets path to download compressed file in main external storage - /storage/emulated/0/
+    // and creates a new folder if doesnt exist named earwormfix - for caching reasons
     private String getFileDestinationPath(){
-        String generatedFilename = String.valueOf(System.currentTimeMillis());
-        String filePathEnvironment = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-        File directoryFolder = new File(filePathEnvironment + "/video/");
+        generatedFilename = String.valueOf(System.currentTimeMillis());
+        String filePathEnvironment = Environment.getExternalStorageDirectory().getAbsolutePath();
+        File directoryFolder = new File(filePathEnvironment + "/earwormfix/");
         if(!directoryFolder.exists()){
             directoryFolder.mkdir();
         }
-        Log.d(TAG, "Full path " + filePathEnvironment + "/video/" + generatedFilename + ".mp4");
-        return filePathEnvironment + "/video/" + generatedFilename + ".mp4";
+        Log.d(TAG, "Full path " + filePathEnvironment + "/earwormfix/" + generatedFilename + ".mp4");
+        return filePathEnvironment+ "/earwormfix/" + generatedFilename + ".mp4";
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -194,77 +212,22 @@ public class AddFeed extends AppCompatActivity implements EasyPermissions.Permis
     }
     @Override
     public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
+
         if(uri != null){
-            if(EasyPermissions.hasPermissions(AddFeed.this, android.Manifest.permission.READ_EXTERNAL_STORAGE)){
-                displayRecordedVideo.setVideoURI(uri);
-                displayRecordedVideo.start();
+            if(EasyPermissions.hasPermissions(AddFeed.this, android.Manifest.permission.READ_EXTERNAL_STORAGE) &&
+                    EasyPermissions.hasPermissions(AddFeed.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)){
+                /*displayRecordedVideo.setVideoURI(uri);
+                displayRecordedVideo.start();*/
+                initializePlayer();
 
                 pathToStoredVideo = getRealPathFromURIPath(uri, AddFeed.this);
                 Log.d(TAG, "Recorded Video Path " + pathToStoredVideo);
-                //Store the video to your server
-                //uploadVideoToServer(pathToStoredVideo);
-
             }
         }
     }
     @Override
     public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
         Log.d(TAG, "User has denied requested permission");
-    }
-
-    /**
-     * Uploading the video to server
-     * */
-    @NonNull
-    private RequestBody createPartFromString(String descriptionString) {
-        return RequestBody.create(
-                okhttp3.MultipartBody.FORM, descriptionString);
-    }
-    private void uploadVideoToServer(String pathToVideoFile){
-        File videoFile = new File(pathToVideoFile);
-        RequestBody videoBody = RequestBody.create(MediaType.parse("video/*"), videoFile);
-        MultipartBody.Part vFile = MultipartBody.Part.createFormData("video", videoFile.getName(), videoBody);
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(SERVER_PATH)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        VideoUploadApi vInterface = retrofit.create(VideoUploadApi.class);
-
-        // get user unique id
-        HashMap<String, String> user = db.getUserDetails();
-        String userId = user.get("uid");
-        // get video length
-        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(this, Uri.fromFile(videoFile));
-        // time in Micro seconds
-        String time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-        retriever.release();
-        // create a map of data to pass along
-        RequestBody uid = createPartFromString(userId);
-        RequestBody len = createPartFromString(time);
-
-        HashMap<String, RequestBody> map = new HashMap<>();
-        map.put("user", uid);
-        map.put("length", len);
-        // fetch user unique id and video length
-        Call<ResultObject> serverCom = vInterface.uploadVideoToServer(vFile, map);
-        serverCom.enqueue(new Callback<ResultObject>() {
-            @Override
-            public void onResponse(@NonNull Call<ResultObject> call, @NonNull Response<ResultObject> response) {
-                ResultObject result = response.body();
-                Log.d("response","-------------------------------"+ response.code() );
-                /*Log.d("result is: ", String.valueOf(response));
-                assert result != null;
-                if(!TextUtils.isEmpty(result.getSuccess())){
-                    Toast.makeText(AddFeed.this, "Result " + result.getSuccess(), Toast.LENGTH_LONG).show();
-                    Log.d(TAG, "Result " + result.getSuccess());
-                }*/
-            }
-            @Override
-            public void onFailure(@NonNull Call<ResultObject> call, @NonNull Throwable t) {
-                Log.d(TAG, "Error message " + t.getMessage());
-            }
-        });
     }
 
     /**
@@ -279,20 +242,67 @@ public class AddFeed extends AppCompatActivity implements EasyPermissions.Permis
             return contentURI.getPath();
         } else {
             cursor.moveToFirst();
-            int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            int idx = cursor.getColumnIndex(MediaStore.Video.VideoColumns.DATA);
             String path = cursor.getString(idx);
             cursor.close();
             return path;
         }
     }
-    public String getDevicePath(Uri uri) {//unite with previous method?
-        String[] projection = { MediaStore.Images.Media.DATA };
-        Cursor cursor = managedQuery(uri, projection, null, null, null);
-        if(cursor!=null) {
-            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
-            cursor.moveToFirst();
-            return cursor.getString(column_index);
-        }
-        else return null;
+
+    private void initializePlayer() {
+        displayRecordedVideo = ExoPlayerFactory.newSimpleInstance(
+                this
+                ,
+                new DefaultTrackSelector());
+
+        playerView.setPlayer(displayRecordedVideo);
+
+        displayRecordedVideo.setPlayWhenReady(false);
+        displayRecordedVideo.seekTo(0, 0);
+        start();
     }
+    private MediaSource buildMediaSource(Uri uri) {
+        return new ExtractorMediaSource.Factory(
+                new DefaultDataSourceFactory(this,"video")).
+                createMediaSource(uri);
+    }
+    public void start(){
+        MediaSource mediaSource = buildMediaSource(uri);
+        displayRecordedVideo.prepare(mediaSource, true, false);
+        displayRecordedVideo.setPlayWhenReady(true);
+    }
+
+    public void stop(){
+        displayRecordedVideo.stop(true);
+    }
+    public void release(){
+        displayRecordedVideo.release();
+    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(displayRecordedVideo != null){
+            stop();
+            release();
+        }
+
+    }
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if(uri!=null)
+            initializePlayer();
+        // Checks the orientation of the screen
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) playerView.getLayoutParams();
+            params.width= params.MATCH_PARENT;
+            params.height= params.MATCH_PARENT;
+            playerView.setLayoutParams(params);
+            aspectRatioFrameLayout.setAspectRatio(18f/9f);
+
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+           // do something
+        }
+    }
+
 }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".Activities.FeedsActivity">
+    <!--<item
+        android:id="@+id/action_favorite"
+        android:icon="@drawable/chat"
+        android:title="photo"
+        app:showAsAction="ifRoom"/>-->
+    <item
+        android:id="@+id/addFix"
+        app:showAsAction="always|withText"
+        app:actionLayout="@layout/text_toolbar"
+        android:title="add" />
+</menu>

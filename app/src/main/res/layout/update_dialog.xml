@@ -29,5 +29,6 @@
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_gravity="end"
+        android:fontFamily="@font/averia_serif_libre_bold_italic"
         android:text="Submit" />
 </LinearLayout>

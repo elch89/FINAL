@@ -8,8 +8,6 @@ public class AppConfig {
     // Server user register url
     public static String URL_REGISTER = "https://earwormfix.com/register.php";
 
-    // Server user profile url
-    public static String URL_PROFILE = "https://earwormfix.com/profile.php";
     // Server user update profile url
     public static String URL_UPDATE = "https://earwormfix.com/update.php";
 }

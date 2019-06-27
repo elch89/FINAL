@@ -1,4 +1,4 @@
-package com.earwormfix.earwormfix.helper;
+package com.earwormfix.earwormfix.helpers;
 
 import android.content.Context;
 import android.content.SharedPreferences;

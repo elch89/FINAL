@@ -4,30 +4,34 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.earwormfix.earwormfix.Adapters.FeedsPagerAdapter;
-import com.earwormfix.earwormfix.FeedFragment;
-import com.earwormfix.earwormfix.MyFixFragment;
+import com.earwormfix.earwormfix.Fragments.FeedFragment;
+import com.earwormfix.earwormfix.Fragments.MyFixFragment;
 import com.earwormfix.earwormfix.R;
-import com.earwormfix.earwormfix.helper.SQLiteHandler;
-import com.earwormfix.earwormfix.helper.SessionManager;
+import com.earwormfix.earwormfix.helpers.SQLiteHandler;
+import com.earwormfix.earwormfix.helpers.SessionManager;
 
-import java.util.HashMap;
 import java.util.Objects;
 
 
@@ -51,24 +55,31 @@ public class FeedsActivity extends AppCompatActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView( R.layout.activity_feeds);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(myToolbar);
         mContactDialog = new Dialog(this);
 
-
-
         mDrawerLayout = findViewById(R.id.drawer_layout);
+        mNav = findViewById(R.id.nv);
+        viewPager = (ViewPager) findViewById(R.id.viewPager);
+        tabLayout = (TabLayout) findViewById(R.id.tabLayout);
+
+        // Add a drawer layout for menu toggle
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                 R.string.open, R.string.close){
-            public void onDrawerClosed(View view){
-
-            }
-            public void onDrawerOpened(View drawerView){
-
-            }
+            public void onDrawerClosed(View view){ }
+            public void onDrawerOpened(View drawerView){ }
         };
         mDrawerLayout.addDrawerListener(mDrawerToggle);
         mDrawerToggle.syncState();
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
-        mNav = findViewById(R.id.nv);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setLogo(R.drawable.ewf_bg_white);
+        getSupportActionBar().setDisplayUseLogoEnabled(true);
+
+
+        // set navigation items
         mNav.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -76,36 +87,34 @@ public class FeedsActivity extends AppCompatActivity {
                 switch(id)
                 {
                     case R.id.search:
-                        Toast.makeText(FeedsActivity.this, "Search",Toast.LENGTH_SHORT).show();break;
+                        Intent searchFriends = new Intent(FeedsActivity.this,AddFriendsActivity.class);
+                        startActivity(searchFriends);
+                        finish();
+                        break;
                     case R.id.my_profile:
-                        Toast.makeText(FeedsActivity.this, "My profile",Toast.LENGTH_SHORT).show();
                         Intent userIntent = new Intent(FeedsActivity.this,ProfileActivity.class);
                         startActivity(userIntent);
+                        finish();
                         break;
-                    case R.id.invite:
+                    case R.id.invite:// Send email to a friend
                         Toast.makeText(FeedsActivity.this, "Invite",Toast.LENGTH_SHORT).show();break;
                     case R.id.contact:
-                        Toast.makeText(FeedsActivity.this, "Contact us",Toast.LENGTH_SHORT).show();
-                        ShowPopup();
+                        contactPopUp();
                         break;
                     case R.id.settings:
                         Toast.makeText(FeedsActivity.this, "Settings",Toast.LENGTH_SHORT).show();break;
                     case R.id.logout:
-                       /* Toast.makeText(FeedsActivity.this, "Logout",Toast.LENGTH_SHORT).show();*/
                         logoutUser();
                         break;
                     default:
                         return true;
                 }
 
-
                 return true;
-
             }
         });
 
-        viewPager = (ViewPager) findViewById(R.id.viewPager);
-        tabLayout = (TabLayout) findViewById(R.id.tabLayout);
+        // feedPager gives us the swipe effect on both fragments
         adapter = new FeedsPagerAdapter(getSupportFragmentManager());
         adapter.addFragment(new FeedFragment(), "FEEDS");
         adapter.addFragment(new MyFixFragment(), "MY FIX");
@@ -113,22 +122,14 @@ public class FeedsActivity extends AppCompatActivity {
         tabLayout.setupWithViewPager(viewPager);
 
 
-        //************************************************************//
-
-
         // SqLite database handler
         db = new SQLiteHandler(getApplicationContext());
-
         // session manager
         session = new SessionManager(getApplicationContext());
 
         if (!session.isLoggedIn()) {
             logoutUser();
         }
-
-        // Fetching user details from sqlite
-        HashMap<String, String> user = db.getUserDetails();
-        HashMap<String, String> userProfile = db.getProfileDetails();
 
     }
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -144,27 +145,47 @@ public class FeedsActivity extends AppCompatActivity {
         session.setLogin(false);
 
         db.deleteUsers();
-        db.deleteProfiles();
-
         // Launching the login activity
         Intent intent = new Intent(FeedsActivity.this, LoginActivity.class);
         startActivity(intent);
         finish();
     }
-
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+        MenuItem signItem = menu.findItem(R.id.addFix);
+        signItem.getActionView().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onOptionsItemSelected(signItem);
+            }
+        });
+        return true;
+    }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(mDrawerToggle.onOptionsItemSelected(item)){
             return true;
         }
-        return super.onOptionsItemSelected(item);
+        switch (item.getItemId()) {
+            case R.id.addFix:
+                Intent intent = new Intent(this, AddFeed.class);
+                startActivity(intent);
+                return true;
 
+            /*case R.id.action_favorite:
+                // User chose the "message board
+                return true;*/
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
     }
-
-
-
-    private void ShowPopup() {
-        //TODO: Stop video playback in fragments
+    private void contactPopUp() {
         TextView txtclose;
         EditText txtContact, txtFrom, txtSubject;
         Button btnContact;
@@ -189,20 +210,29 @@ public class FeedsActivity extends AppCompatActivity {
                 String to = "eli032.eb@gmail.com";//change to server email..
                 String from = txtFrom.getText().toString().trim();
                 String sub = txtSubject.getText().toString().trim();
-                String mess = txtContact.getText().toString().concat("  From:" + from);
-                Intent mail = new Intent(Intent.ACTION_SEND);
+                String mess = txtContact.getText().toString().trim();
+                Intent mail = new Intent(Intent.ACTION_SENDTO);
+                mail.setData(Uri.parse("mailto:")); // only email apps should handle this
                 mail.putExtra(Intent.EXTRA_EMAIL,new String[]{to});
                 mail.putExtra(Intent.EXTRA_SUBJECT, sub);
                 mail.putExtra(Intent.EXTRA_TEXT, mess);
-                mail.setType("message/rfc822");
-                startActivity(Intent.createChooser(mail, "Send email via:"));
-
-                // TODO: resume Video playback in fragments
+                if (mail.resolveActivity(getPackageManager()) != null) {
+                    startActivity(Intent.createChooser(mail, "Send email via:"));
+                }
                 mContactDialog.dismiss();
             }
         });
         Objects.requireNonNull(mContactDialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         mContactDialog.show();
+    }
+    // Closes drawer layout on back pressed
+    @Override
+    public void onBackPressed() {
+        if (this.mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+            this.mDrawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 
 
