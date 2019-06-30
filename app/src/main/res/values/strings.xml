@@ -8,12 +8,12 @@
     <string name="user_id">User #1</string>
     <string name="open">slidingMenu</string>
     <string name="close">slidingMenu</string>
-    <string name="upload_video">UPLOAD FIX</string>
-    <string name="make_video">RECORD FIX</string>
+    <string name="upload_video">קובץ מהטלפון</string>
+    <string name="make_video">הקלטה</string>
     <string name="read_file">This app needs access to your file storage so that it can read video.</string>
     <string name="ok">OK</string>
     <string name="cancel">CANCEL</string>
-    <string name="dialog_message">Are you sure you whant to post this fix?</string>
+    <string name="dialog_message">Are you sure you want to post this fix?</string>
     <string name="dialog_title">Confirmation</string>
     <string name="friendsAlready">friends</string>
     <string name="upload_pic">Upload picture</string>

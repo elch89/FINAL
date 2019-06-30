@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName;
 
 /** Creates a 'entity' or object description to save in database
  * A feed has many comments relation*/
-public class Feed  {
+public class Post {
     @SerializedName("id")
     private int id;
     @SerializedName("pid")
@@ -38,9 +38,9 @@ public class Feed  {
     private String errMsg;
 
 
-    public Feed(int id, String pid,String description, String url, String uid, String length,
-                int fixed, String created_at,String thumbnail,
-                String name,Comment[] comments, String profPic,boolean error,String errMsg){
+    public Post(int id, String pid, String description, String url, String uid, String length,
+                int fixed, String created_at, String thumbnail,
+                String name, Comment[] comments, String profPic, boolean error, String errMsg){
         this.profPic = profPic;
         this.errMsg =errMsg;
         this.error = error;
@@ -160,19 +160,19 @@ public class Feed  {
         this.profPic = profPic;
     }
 
-    public static final DiffUtil.ItemCallback<Feed> CALLBACK = new DiffUtil.ItemCallback<Feed>() {
+    public static final DiffUtil.ItemCallback<Post> CALLBACK = new DiffUtil.ItemCallback<Post>() {
         @Override
-        public boolean areItemsTheSame(@NonNull Feed feeds, @NonNull Feed t1) {
+        public boolean areItemsTheSame(@NonNull Post feeds, @NonNull Post t1) {
             return feeds.id == t1.id;
         }
 
         @Override
-        public boolean areContentsTheSame(@NonNull Feed feeds, @NonNull Feed t1) {
+        public boolean areContentsTheSame(@NonNull Post feeds, @NonNull Post t1) {
             return feeds.equals(t1);
         }
         /*@Override
-        public Feed getChangePayload(@NonNull Feed f1,@NonNull Feed f2){
-            return (Feed) super.getChangePayload(f1,f2);
+        public Post getChangePayload(@NonNull Post f1,@NonNull Post f2){
+            return (Post) super.getChangePayload(f1,f2);
         }*/
     };
     @Override
@@ -180,8 +180,8 @@ public class Feed  {
         if (obj == this)
             return true;
 
-        Feed feed = (Feed) obj;
+        Post post = (Post) obj;
 
-        return this.id == feed.id ;
+        return this.id == post.id ;
     }
 }

@@ -11,7 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.earwormfix.earwormfix.GlideApp;
-import com.earwormfix.earwormfix.Models.Feed;
+import com.earwormfix.earwormfix.Models.Post;
 import com.earwormfix.earwormfix.R;
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
@@ -64,7 +64,7 @@ public class FeedsViewHolder extends RecyclerView.ViewHolder implements ToroPlay
 
         ImageView volumeOff =itemView.findViewById(R.id.exo_volume_off);
         ImageView volumeOn = itemView.findViewById(R.id.exo_volume_up);
-        volumeOn.setVisibility(View.INVISIBLE);
+        volumeOff.setVisibility(View.INVISIBLE);
         volumeOff.setOnClickListener(v -> {
             if(helper!=null){
                 helper.setVolume(0f);
@@ -88,7 +88,7 @@ public class FeedsViewHolder extends RecyclerView.ViewHolder implements ToroPlay
 
     }
 
-     public void bind(Feed item) {
+     public void bind(Post item) {
         String baseUrl ="https://earwormfix.com/";
         String mediaName = baseUrl.concat(item.getUrl());//"https://earwormfix.com/post/123/20190529_130707.mp4";//
         videoUri = Uri.parse(mediaName);

@@ -10,7 +10,7 @@ import android.arch.paging.PagedList;
 import android.support.annotation.NonNull;
 
 import com.earwormfix.earwormfix.FeedDataSource;
-import com.earwormfix.earwormfix.Models.Feed;
+import com.earwormfix.earwormfix.Models.Post;
 import com.earwormfix.earwormfix.Models.FeedDataSourceFactory;
 import com.earwormfix.earwormfix.Utilitties.NetworkState;
 
@@ -22,9 +22,9 @@ public class FeedViewModel extends AndroidViewModel {
     FeedDataSourceFactory feedDataSourceFactory;
     //MutableLiveData<FeedDataSource> dataSourceMutableLiveData;
     Executor executor;
-    LiveData<PagedList<Feed>> pagedListLiveData;
+    LiveData<PagedList<Post>> pagedListLiveData;
     LiveData<NetworkState> networkState;
-    LivePagedListBuilder<Integer,Feed> builder;
+    LivePagedListBuilder<Integer, Post> builder;
 
     public FeedViewModel(@NonNull Application application) {
         super(application);
@@ -36,10 +36,10 @@ public class FeedViewModel extends AndroidViewModel {
                 setEnablePlaceholders(false).
                 setInitialLoadSizeHint(5).setPageSize(5).setPrefetchDistance(2).build();
         executor = Executors.newFixedThreadPool(5);//.setNotifyExecutor(executor)
-        builder = new LivePagedListBuilder<Integer,Feed>(feedDataSourceFactory,config);
+        builder = new LivePagedListBuilder<Integer, Post>(feedDataSourceFactory,config);
         pagedListLiveData = builder.setFetchExecutor(executor).build();
     }
-    public LiveData<PagedList<Feed>> getPagedListLiveData() {
+    public LiveData<PagedList<Post>> getPagedListLiveData() {
         return pagedListLiveData;
     }
     public LiveData<NetworkState> getNetworkState() {

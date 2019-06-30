@@ -136,7 +136,8 @@ public class MyFixFragment extends Fragment implements ItemClickListener {
                 release();
             }
         }else {
-            initializePlayer(0);
+            if(myFixList !=null)
+                initializePlayer(0);
         }
     }
 
@@ -215,6 +216,7 @@ public class MyFixFragment extends Fragment implements ItemClickListener {
 
     @Override
     public void onSubmitEdit(View view, int position) {
+        player.stop();
        if(view.isSelected()){
            view.setSelected(false);
        }

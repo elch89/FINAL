@@ -9,7 +9,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import com.earwormfix.earwormfix.Models.Comment;
-import com.earwormfix.earwormfix.Models.Feed;
+import com.earwormfix.earwormfix.Models.Post;
 import com.earwormfix.earwormfix.R;
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
 import com.earwormfix.earwormfix.Utilitties.NetworkState;
@@ -30,18 +30,18 @@ import im.ene.toro.ToroUtil;
 import im.ene.toro.widget.Container;
 
 /** display the data in a RecyclerView*/
-public class FeedAdapter extends PagedListAdapter<Feed, FeedsViewHolder> implements PlayerSelector, CacheManager {
+public class FeedAdapter extends PagedListAdapter<Post, FeedsViewHolder> implements PlayerSelector, CacheManager {
 
     private ItemClickListener clickListener;
     private NetworkState networkState;
-    //private List<Feed> mFeeds; // Cached copy of feeds
+    //private List<Post> mFeeds; // Cached copy of feeds
     //private List<Comment> mComments; // Cached copy of comments
     private LayoutInflater inflater;
     private Context context;
 
 
     public FeedAdapter(PlayerSelector origin,Context context) {
-        super(Feed.CALLBACK);
+        super(Post.CALLBACK);
 
         this.origin = ToroUtil.checkNotNull(origin);
         this.context = context;
@@ -62,7 +62,7 @@ public class FeedAdapter extends PagedListAdapter<Feed, FeedsViewHolder> impleme
 
     @Override public void onBindViewHolder(@NonNull FeedsViewHolder holder, int position) {
         List<Comment> mComments = new ArrayList<>();
-        Feed current = getItem(position);
+        Post current = getItem(position);
         if(current!=null){
             if(Objects.requireNonNull(current).getComments() != null ){
                 mComments.addAll(Arrays.asList(current.getComments()));
@@ -119,7 +119,7 @@ public class FeedAdapter extends PagedListAdapter<Feed, FeedsViewHolder> impleme
         return key instanceof Integer ? (Integer) key : null;
     }
 
-    public Feed getFeedAt(int position){
+    public Post getFeedAt(int position){
         return getItem(position);
     }
 

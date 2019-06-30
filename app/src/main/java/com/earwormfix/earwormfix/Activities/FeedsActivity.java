@@ -1,10 +1,13 @@
 package com.earwormfix.earwormfix.Activities;
 
 import android.app.Dialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -55,6 +58,8 @@ public class FeedsActivity extends AppCompatActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView( R.layout.activity_feeds);
+        // for API 26+
+        createNotificationChannel();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
@@ -92,7 +97,7 @@ public class FeedsActivity extends AppCompatActivity {
                         finish();
                         break;
                     case R.id.my_profile:
-                        Intent userIntent = new Intent(FeedsActivity.this,ProfileActivity.class);
+                        Intent userIntent = new Intent(FeedsActivity.this, EditProfileActivity.class);
                         startActivity(userIntent);
                         finish();
                         break;
@@ -170,7 +175,7 @@ public class FeedsActivity extends AppCompatActivity {
         }
         switch (item.getItemId()) {
             case R.id.addFix:
-                Intent intent = new Intent(this, AddFeed.class);
+                Intent intent = new Intent(this, AddPost.class);
                 startActivity(intent);
                 return true;
 
@@ -232,6 +237,21 @@ public class FeedsActivity extends AppCompatActivity {
             this.mDrawerLayout.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
+        }
+    }
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Earwormfix";
+            String description = "notify data stream";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("some_chanel_id", name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
         }
     }
 

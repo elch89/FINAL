@@ -11,27 +11,27 @@ import android.widget.TextView;
 import com.earwormfix.earwormfix.R;
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
 
-public class ProfileAdapter extends RecyclerView.Adapter<ProfileAdapter.ViewHolder> {
+public class EditProfileAdapter extends RecyclerView.Adapter<EditProfileAdapter.ViewHolder> {
     private String[] mData;
     private String[] mCurrent;
     private ItemClickListener mClickListener;
 
-    public ProfileAdapter(String[] mData, String[] mDesc){
+    public EditProfileAdapter(String[] mData, String[] mDesc){
         this.mData = mData;
         this.mCurrent = mDesc;
     }
     @NonNull
     @Override
-    public ProfileAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int i) {
+    public EditProfileAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int i) {
         // create a new view
         View rootView = LayoutInflater
                 .from(parent.getContext())
                 .inflate(R.layout.profile_view, parent, false);
-        return new ProfileAdapter.ViewHolder(rootView, mClickListener);
+        return new EditProfileAdapter.ViewHolder(rootView, mClickListener);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ProfileAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull EditProfileAdapter.ViewHolder holder, int position) {
         holder.mCurr.setText(mCurrent[position]);
         holder.mTV.setText(mData[position]);
     }

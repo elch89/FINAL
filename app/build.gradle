@@ -5,15 +5,14 @@ android {
     defaultConfig {
         applicationId "com.earwormfix.earwormfix"
         minSdkVersion 21
-        targetSdkVersion 28
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         javaCompileOptions {
             annotationProcessorOptions {
-                arguments = ["room.schemaLocation":
-                                     "$projectDir/schemas".toString()]
+
             }
         }
     }
@@ -58,7 +57,7 @@ dependencies {
     implementation "im.ene.toro3:toro:3.6.2.2903"
     implementation "im.ene.toro3:toro-ext-exoplayer:3.6.2.2903"
     // video compreesion
-    implementation 'com.iceteck.silicompressorr:silicompressor:2.2.2'
+
     implementation 'com.writingminds:FFmpegAndroid:0.3.2'
     implementation 'com.github.bumptech.glide:glide:4.9.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
@@ -67,7 +66,7 @@ dependencies {
     implementation "com.google.android.exoplayer:exoplayer:2.9.3"
     implementation "com.google.android.exoplayer:exoplayer-core:2.9.3"
     implementation "com.google.android.exoplayer:exoplayer-ui:2.9.3"
-
+    implementation 'commons-net:commons-net:3.6'
 
     implementation 'com.android.volley:volley:1.1.1'
 

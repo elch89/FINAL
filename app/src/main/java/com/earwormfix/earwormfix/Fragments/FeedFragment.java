@@ -3,7 +3,6 @@ package com.earwormfix.earwormfix.Fragments;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.arch.lifecycle.ViewModelProviders;
-import android.arch.paging.PagedList;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -27,17 +26,16 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.earwormfix.earwormfix.Adapters.FeedAdapter;
 import com.earwormfix.earwormfix.Adapters.FeedViewModel;
 import com.earwormfix.earwormfix.Adapters.SharedViewModel;
-import com.earwormfix.earwormfix.Models.Feed;
+import com.earwormfix.earwormfix.Models.Post;
 import com.earwormfix.earwormfix.Models.MyFix;
 import com.earwormfix.earwormfix.R;
-import com.earwormfix.earwormfix.Rest.AddFeedIntentService;
+import com.earwormfix.earwormfix.Rest.AddPostIntentService;
 import com.earwormfix.earwormfix.Rest.RestApi;
 import com.earwormfix.earwormfix.Rest.ResultObject;
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
@@ -74,16 +72,10 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
     SQLiteHandler db;
     private SharedViewModel model;
     private String selectedPost;
-    private int positionInList = -1;
     private LinearLayout err;
     private Button retry;
     private SwipeRefreshLayout refreshLayout;
-    private Spinner spinner;
-
     private FeedViewModel mFeedViewModel;
-
-    public static final int NEW_FEED_ACTIVITY_REQUEST_CODE = 1;
-
     private Dialog mDialog;
 
     public FeedFragment() {} // Required empty public constructor
@@ -92,11 +84,11 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
     @SuppressLint("CutPasteId")
     public void onViewCreated(@NonNull View views, Bundle savedInstanceState) {
         refreshLayout = views.findViewById(R.id.swipe_main);
-        spinner = views.findViewById(R.id.data_spinner);
         container = views.findViewById(R.id.container);
         err = views.findViewById(R.id.net_err);
         retry = views.findViewById(R.id.net_err).findViewById(R.id.retry_network);
         err.setVisibility(View.INVISIBLE);
+
         //************************************//
         // Initialise comment dialog
         mDialog = new Dialog(Objects.requireNonNull(getActivity()));
@@ -115,7 +107,7 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
 
         container.setPlayerDispatcher(__ -> 500); // The playback will be delayed 500ms.
         container.setPlayerInitializer(order -> {
-            VolumeInfo volumeInfo = new VolumeInfo(false, 0.75f);
+            VolumeInfo volumeInfo = new VolumeInfo(false, 0f);
             return new PlaybackInfo(INDEX_UNSET, TIME_UNSET, volumeInfo);
         });
         // Only when you use Container inside a CoordinatorLayout and depends on Behavior.
@@ -143,10 +135,13 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
     @Override
     public void onResume() {
         super.onResume();
-        Log.d("ON_RESUME","observing?");
+        Log.d("ON_RESUME","observing service");
         // Register for the particular broadcast based on ACTION string
-        IntentFilter filter = new IntentFilter(AddFeedIntentService.COMPRESS);
+        IntentFilter filter = new IntentFilter(AddPostIntentService.COMPRESS);
         LocalBroadcastManager.getInstance(Objects.requireNonNull(getActivity())).registerReceiver(testReceiver, filter);
+        String quote = (String)getActivity().getIntent().getStringExtra("testing");
+        Log.d("ON_RESUME"," " +quote);
+
 
     }
     @Override
@@ -163,7 +158,11 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
             if (resultCode == RESULT_OK) {
                 boolean resultValue = intent.getBooleanExtra("resultValue",false);
                 if(resultValue){
+                    Toast.makeText(getContext(),"הפוסט הועלה בהצלחה",Toast.LENGTH_LONG).show();
                     mFeedViewModel.refresh();
+                }
+                else{
+                    Toast.makeText(getContext(),"ארעה שגיאה בהעלאת הפוסט",Toast.LENGTH_LONG).show();
                 }
             }
         }
@@ -199,10 +198,8 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
     @Override
     public  void  onFixClick(View view, int position){
         selectedPost = adapter.getFeedAt(position).getPid();
-        positionInList =position;
-
         sendFixed(selectedPost);
-
+        view.setClickable(false);
         initContainer();
     }
     // Add to myfix list
@@ -210,7 +207,7 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
     public void onSubmitEdit(View view, int position) {
         // add to list
         Log.e("DEBUG", "add to list clicked");
-        Feed selectedView = adapter.getFeedAt(position);
+        Post selectedView = adapter.getFeedAt(position);
         addToPlaylist(selectedView);
         MyFix myFix = new MyFix(1,selectedView.getDescription(),selectedView.getUrl(),selectedView.getThumbnail(),false,"");
         model.select(myFix);
@@ -258,7 +255,7 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
 
         container.setPlayerDispatcher(__ -> 500); // The playback will be delayed 500ms.
         container.setPlayerInitializer(order -> {
-            VolumeInfo volumeInfo = new VolumeInfo(false, 0.75f);
+            VolumeInfo volumeInfo = new VolumeInfo(false, 0f);
             return new PlaybackInfo(INDEX_UNSET, TIME_UNSET, volumeInfo);
         });
         container.setAdapter(adapter);
@@ -295,9 +292,11 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
             public void onResponse(Call<ResultObject> call, Response<ResultObject> response) {
                 if(response.isSuccessful()){
                     ResultObject result = response.body();
+                    if(!Objects.requireNonNull(result).isStat()){
+                        Log.e("SEND_FIX", " Send fix error");
+                    }
                     Log.i("SEND_COMMENT", " "+ Objects.requireNonNull(result).getSuccess());
-                    PagedList<Feed> s =mFeedViewModel.getPagedListLiveData().getValue();
-                    Objects.requireNonNull(s).getDataSource().invalidate();
+                    mFeedViewModel.refresh();
                 }
             }
             @Override
@@ -330,6 +329,9 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
                 if(response.isSuccessful()){
                     ResultObject result = response.body();
                     Log.i("SEND_FIX", " "+Objects.requireNonNull(result).getSuccess());
+                    if(!result.isStat()){
+                        Log.e("SEND_FIX", " Send fix error");
+                    }
                 }
                 mFeedViewModel.refresh();
             }
@@ -341,7 +343,7 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
         });
     }
 
-    private void addToPlaylist(Feed feed){
+    private void addToPlaylist(Post post){
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(SERVER_PATH)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -351,9 +353,9 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
 
         RestApi vInterface = retrofit.create(RestApi.class);
         RequestBody uid = createPartFromString(userId);
-        RequestBody description = createPartFromString(feed.getDescription());
-        RequestBody vidUrl = createPartFromString(feed.getUrl());
-        RequestBody thumbUrl = createPartFromString(feed.getThumbnail());
+        RequestBody description = createPartFromString(post.getDescription());
+        RequestBody vidUrl = createPartFromString(post.getUrl());
+        RequestBody thumbUrl = createPartFromString(post.getThumbnail());
 
         // Map post parameters
         HashMap<String, RequestBody> map = new HashMap<>();
@@ -369,6 +371,7 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
                 if(response.isSuccessful()){
                     ResultObject result = response.body();
                     Log.i("ADD_LIST", " "+ Objects.requireNonNull(result).getSuccess());
+                    Toast.makeText(getContext(),"השיר נוסף בהצלחה לרשימת ההשמעה", Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -403,5 +406,6 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         return (networkInfo != null && networkInfo.isConnected());
     }
+
 
 }

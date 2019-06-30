@@ -5,7 +5,7 @@ import android.arch.paging.PageKeyedDataSource;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.earwormfix.earwormfix.Models.Feed;
+import com.earwormfix.earwormfix.Models.Post;
 import com.earwormfix.earwormfix.Rest.FetchFeedApi;
 import com.earwormfix.earwormfix.Rest.FetchFeedApiFactory;
 import com.earwormfix.earwormfix.Utilitties.NetworkState;
@@ -20,7 +20,7 @@ import retrofit2.Response;
 
 import static com.earwormfix.earwormfix.AppController.getAppContext;
 
-public class FeedDataSource extends PageKeyedDataSource<Integer, Feed> {
+public class FeedDataSource extends PageKeyedDataSource<Integer, Post> {
     private SQLiteHandler db;
     HashMap<String, String> user;
     FetchFeedApi ffa;
@@ -40,20 +40,20 @@ public class FeedDataSource extends PageKeyedDataSource<Integer, Feed> {
         return initialLoading;
     }
     @Override
-    public void loadInitial(@NonNull LoadInitialParams<Integer> params, @NonNull LoadInitialCallback<Integer, Feed> callback) {
-        //ffa = RetrofitInstance.getRetrofitInstance().create(FetchFeedApi.class);
+    public void loadInitial(@NonNull LoadInitialParams<Integer> params, @NonNull LoadInitialCallback<Integer, Post> callback) {
+        //ffa = VideoUploadFactory.getRetrofitInstance().create(FetchFeedApi.class);
         Log.i("DEBUG", "Loading Rang " + 1 + " Count " + params.requestedLoadSize);
         initialLoading.postValue(NetworkState.LOADING);
         networkState.postValue(NetworkState.LOADING);
         //ffa = FetchFeedApiFactory.create();
-        Call<List<Feed>> data = ffa.fetchPosts(1, params.requestedLoadSize,user.get("uid"));
-        data.enqueue(new Callback<List<Feed>>() {
+        Call<List<Post>> data = ffa.fetchPosts(1, params.requestedLoadSize,user.get("uid"));
+        data.enqueue(new Callback<List<Post>>() {
             @Override
-            public void onResponse(Call<List<Feed>> call, Response<List<Feed>> response) {
+            public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
                 if(response.isSuccessful()){
-                    List<Feed> feedList = response.body();
-                    if(feedList!=null && !feedList.get(0).isError()){
-                        callback.onResult(feedList,null,  2);
+                    List<Post> postList = response.body();
+                    if(postList !=null && !postList.get(0).isError()){
+                        callback.onResult(postList,null,  2);
                         initialLoading.postValue(NetworkState.LOADED);
                         networkState.postValue(NetworkState.LOADED);
                     }
@@ -67,7 +67,7 @@ public class FeedDataSource extends PageKeyedDataSource<Integer, Feed> {
             }
 
             @Override
-            public void onFailure(Call<List<Feed>> call, Throwable t) {
+            public void onFailure(Call<List<Post>> call, Throwable t) {
                 Log.e("Error",t.getMessage()+call.toString());
                 networkState.postValue(new NetworkState(NetworkState.Status.FAILED, t.getMessage()));
             }
@@ -75,24 +75,24 @@ public class FeedDataSource extends PageKeyedDataSource<Integer, Feed> {
     }
 
     @Override
-    public void loadBefore(@NonNull LoadParams<Integer> params, @NonNull LoadCallback<Integer, Feed> callback) {
+    public void loadBefore(@NonNull LoadParams<Integer> params, @NonNull LoadCallback<Integer, Post> callback) {
         // Do nothing
     }
 
     @Override
-    public void loadAfter(@NonNull LoadParams<Integer> params, @NonNull LoadCallback<Integer, Feed> callback) {
+    public void loadAfter(@NonNull LoadParams<Integer> params, @NonNull LoadCallback<Integer, Post> callback) {
         Log.i("DEBUG", "Loading Rang " + params.key + " Count " + params.requestedLoadSize);
         networkState.postValue(NetworkState.LOADING);
-        //ffa = RetrofitInstance.getRetrofitInstance().create(FetchFeedApi.class);
-        Call<List<Feed>> data = ffa.fetchPosts( params.key,params.requestedLoadSize,user.get("uid"));
-        data.enqueue(new Callback<List<Feed>>() {
+        //ffa = VideoUploadFactory.getRetrofitInstance().create(FetchFeedApi.class);
+        Call<List<Post>> data = ffa.fetchPosts( params.key,params.requestedLoadSize,user.get("uid"));
+        data.enqueue(new Callback<List<Post>>() {
             @Override
-            public void onResponse(Call<List<Feed>> call, Response<List<Feed>> response) {
+            public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
                 if(response.isSuccessful()){
-                    List<Feed> feedList = response.body();
-                    if(feedList!=null && !feedList.get(0).isError()){
+                    List<Post> postList = response.body();
+                    if(postList !=null && !postList.get(0).isError()){
                         networkState.postValue(NetworkState.LOADED);
-                        callback.onResult(feedList,params.key+1);
+                        callback.onResult(postList,params.key+1);
                     }
                 }
                 else {
@@ -103,7 +103,7 @@ public class FeedDataSource extends PageKeyedDataSource<Integer, Feed> {
             }
 
             @Override
-            public void onFailure(Call<List<Feed>> call, Throwable t) {
+            public void onFailure(Call<List<Post>> call, Throwable t) {
                 Log.d("Error",t.getMessage());
                 networkState.postValue(new NetworkState(NetworkState.Status.FAILED, t.getMessage()));
             }

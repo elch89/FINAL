@@ -24,7 +24,7 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.earwormfix.earwormfix.Adapters.ProfileAdapter;
+import com.earwormfix.earwormfix.Adapters.EditProfileAdapter;
 import com.earwormfix.earwormfix.AppConfig;
 import com.earwormfix.earwormfix.AppController;
 import com.earwormfix.earwormfix.R;
@@ -39,9 +39,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class ProfileActivity extends AppCompatActivity implements ItemClickListener, DatePicker.OnDateChangedListener {
+public class EditProfileActivity extends AppCompatActivity implements ItemClickListener, DatePicker.OnDateChangedListener {
     private RecyclerView rv;
-    private ProfileAdapter mAdapter;
+    private EditProfileAdapter mAdapter;
     private EditText txtEdit;
     private Button backToFeed;
     private Button mEdit;
@@ -78,7 +78,7 @@ public class ProfileActivity extends AppCompatActivity implements ItemClickListe
             @Override
             public void onClick(View view) {
                 if(view.getId() == R.id.btn_back_to_feeds){
-                    Intent backInt = new Intent(ProfileActivity.this, FeedsActivity.class);
+                    Intent backInt = new Intent(EditProfileActivity.this, FeedsActivity.class);
                     startActivity(backInt);
                     /* Go back to FeedsActivity*/
                     finish();
@@ -91,7 +91,7 @@ public class ProfileActivity extends AppCompatActivity implements ItemClickListe
     }
     @Override
     public void onBackPressed() {
-        Intent backInt = new Intent(ProfileActivity.this, FeedsActivity.class);
+        Intent backInt = new Intent(EditProfileActivity.this, FeedsActivity.class);
         startActivity(backInt);
         super.onBackPressed();
     }
@@ -260,7 +260,7 @@ public class ProfileActivity extends AppCompatActivity implements ItemClickListe
                           userProfile.get(KEY_GENDER), userProfile.get(KEY_GENRE), String.valueOf(userProfile.get(KEY_PHONE))};
 
         mDataset = new String[]{"NAME: ", "EMAIL: ", "BIRTH DATE: ", "GENDER: ", "GENRE: ", "PHONE: "};
-        mAdapter = new ProfileAdapter(mDataset, mCurrent);
+        mAdapter = new EditProfileAdapter(mDataset, mCurrent);
         // Update layout for new data
         rv.setAdapter(mAdapter);
         rv.setLayoutManager(new LinearLayoutManager(this));
@@ -272,6 +272,8 @@ public class ProfileActivity extends AppCompatActivity implements ItemClickListe
         final Dialog dtPickerDlg = new Dialog(this);
         dtPickerDlg.setContentView(R.layout.picker);
         txtEdit.setInputType(InputType.TYPE_NULL);
+        txtEdit.setClickable(true);
+        txtEdit.setFocusable(false);
         txtEdit.setOnClickListener(v -> {
             final DatePicker picker =(DatePicker) dtPickerDlg.findViewById(R.id.datePicker);
             Button btnOk =(Button) dtPickerDlg.findViewById(R.id.okbutton);

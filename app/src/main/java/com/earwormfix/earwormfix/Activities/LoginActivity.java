@@ -1,8 +1,11 @@
 package com.earwormfix.earwormfix.Activities;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -33,6 +36,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private EditText inputEmail;
     private EditText inputPassword;
     private ProgressDialog pDialog;
+    private String email;
+    private String password;
     private SessionManager session;
     private SQLiteHandler db;
     @Override
@@ -61,26 +66,39 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         // Session manager
         session = new SessionManager(getApplicationContext());
-        Log.e("alreadyLoggedInn","   "+session.isLoggedIn());
         // Check if user is already logged in or not
         if (session.isLoggedIn()) {
             // User is already logged in. Take him to main activity
             Intent intent = new Intent(LoginActivity.this, FeedsActivity.class);
             startActivity(intent);
             finish();
+
         }
     }
     @Override
     public void onClick(View v) {
         if(v.getId() == R.id.btnLogin)
         {
-            String email = inputEmail.getText().toString().trim();
-            String password = inputPassword.getText().toString().trim();
+            email = inputEmail.getText().toString().trim();
+            password = inputPassword.getText().toString().trim();
 
             // Check for empty data in the form
             if (!email.isEmpty() && !password.isEmpty()) {
                 // login user
-                checkLogin(email, password);
+                int PERMISSION_ALL = 1;
+                String[] PERMISSIONS = {
+                        android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                };
+
+                if(!hasPermissions(this, PERMISSIONS)){
+                    ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
+                }
+                else {
+                    // Permission has already been granted
+                    checkLogin(email, password);
+                }
+
             } else {
                 // Prompt user to enter credentials
                 Toast.makeText(getApplicationContext(),
@@ -202,5 +220,29 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private void hideDialog() {
         if (pDialog.isShowing())
             pDialog.dismiss();
+    }
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions, int[] grantResults) {
+        if (requestCode ==1 ) {
+
+                // If request is cancelled, the result arrays are empty.
+            if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                checkLogin(email, password);
+            }
+            else {
+                Toast.makeText(this,"יש לאשר גישה לקבצים פנימיים",Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+    public static boolean hasPermissions(Context context, String... permissions) {
+        if (context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

@@ -99,6 +99,7 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
         imgAvatar.setTag(R.drawable.avatar_dog);
         // init dat listener
         mBirth.setInputType(InputType.TYPE_NULL);
+        mBirth.setFocusable(false);
         mBirth.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -215,6 +216,7 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
             @Override
             public void onClick(View v) {
                 dtPickerDlg.dismiss();
+                mBirth.setFocusable(true);
             }
         });
         Calendar c = Calendar.getInstance();
