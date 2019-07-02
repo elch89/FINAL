@@ -81,6 +81,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         {
             email = inputEmail.getText().toString().trim();
             password = inputPassword.getText().toString().trim();
+            validateFields();
 
             // Check for empty data in the form
             if (!email.isEmpty() && !password.isEmpty()) {
@@ -244,5 +245,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             }
         }
         return true;
+    }
+
+    private void validateFields(){
+
     }
 }

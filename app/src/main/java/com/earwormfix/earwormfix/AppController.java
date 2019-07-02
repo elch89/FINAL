@@ -29,15 +29,14 @@ public class AppController extends Application {
     public static synchronized AppController getInstance() {
         return mInstance;
     }
-
+    // Set up a Request queue for volley, which manages worker threads for running the network operations
     public RequestQueue getRequestQueue() {
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(getApplicationContext());
         }
-
         return mRequestQueue;
     }
-
+    // Add Request objects to the queue
     public <T> void addToRequestQueue(Request<T> req, String tag) {
         req.setTag(TextUtils.isEmpty(tag) ? TAG : tag);
         getRequestQueue().add(req);
@@ -47,19 +46,21 @@ public class AppController extends Application {
         req.setTag(TAG);
         getRequestQueue().add(req);
     }
-
+    // Cancel requests
     public void cancelPendingRequests(Object tag) {
         if (mRequestQueue != null) {
             mRequestQueue.cancelAll(tag);
         }
     }
+    // get Instance of appController
     private static AppController get(Context context) {
         return (AppController) context.getApplicationContext();
     }
+    // get application Context for using in classes where context cannot be fetched
     public static Context getAppContext() {
         return AppController.context;
     }
-
+    // create an appController based on given app context
     public static AppController create(Context context) {
         return AppController.get(context);
     }

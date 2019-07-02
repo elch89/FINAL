@@ -11,100 +11,89 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".Activities.AddPost">
-    <ProgressBar
-        android:id="@+id/pBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="100dp"
-        android:layout_marginTop="200dp"
-        android:minHeight="50dp"
-        android:minWidth="200dp"
-        android:max="100"
-        android:indeterminate="false"
-        android:progress="0"
-        android:visibility="gone"/>
-    <TextView
-        android:id="@+id/tView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/pBar"
-        android:layout_below="@+id/pBar"
-        android:visibility="gone"
-        android:textColor="@color/colorPrimaryDark"/>
-    <LinearLayout
-        android:id="@+id/main_layout"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent" >
 
-
-        <com.google.android.exoplayer2.ui.AspectRatioFrameLayout
-            android:id="@+id/videoView1"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="400dp"
-            app:resize_mode="fixed_width">
-            <com.google.android.exoplayer2.ui.PlayerView
-                android:id="@+id/video_display"
+            android:layout_height="wrap_content"
+             >
+            <LinearLayout
+                android:id="@+id/main_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:controller_layout_id="@layout/custom_control_view"
-                android:minHeight="200dp"
-                />
-        </com.google.android.exoplayer2.ui.AspectRatioFrameLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-           >
-
-            <Button
-                android:id="@+id/capture_video"
-                android:layout_width="200dp"
-                android:layout_height="wrap_content"
-                android:background="@color/lightBlue"
-                android:gravity="center"
-                android:text="@string/make_video"
-                android:textColor="@color/colorAccent" />
-
-            <Button
-                android:id="@+id/upload_video"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/lightBlue"
-                android:gravity="center"
-                android:text="@string/upload_video"
-                android:textColor="@color/design_default_color_primary_dark" />
-        </LinearLayout>
+                android:orientation="vertical">
 
 
+                <com.google.android.exoplayer2.ui.AspectRatioFrameLayout
+                    android:id="@+id/videoView1"
+                    android:layout_width="match_parent"
+                    android:layout_height="400dp"
+                    app:resize_mode="fixed_width">
+                    <com.google.android.exoplayer2.ui.PlayerView
+                        android:id="@+id/video_display"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:controller_layout_id="@layout/custom_control_view"
+                        android:minHeight="200dp"
+                        />
+                </com.google.android.exoplayer2.ui.AspectRatioFrameLayout>
 
-        <EditText
-            android:id="@+id/say_something"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
-            android:hint="תיאור קצר"
-            android:inputType="textAutoComplete"
-            android:padding="6dp"
-            android:textSize="18sp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                   >
+
+                    <Button
+                        android:id="@+id/capture_video"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@color/lightBlue"
+                        android:gravity="center"
+                        android:text="@string/make_video"
+                        android:textColor="@color/colorAccent" />
+
+                    <Button
+                        android:layout_weight="1"
+                        android:id="@+id/upload_video"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:background="@color/lightBlue"
+                        android:gravity="center"
+                        android:text="@string/upload_video"
+                        android:textColor="@color/design_default_color_primary_dark" />
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/say_something"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:hint="תיאור קצר"
+                    android:inputType="textAutoComplete"
+                    android:padding="6dp"
+                    android:textSize="18sp" />
 
 
-        <Button
-            android:id="@+id/button_save"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/averia_serif_libre_bold_italic"
-            android:textColor="#000000"
-            android:textSize="25sp"
-            android:background="@drawable/custom_button"
-            android:shadowColor="#fd662c"
-            android:shadowDx="0"
-            android:shadowDy="0"
-            android:shadowRadius="5"
-            android:text="POST MY FIX"
-           />
-    </LinearLayout>
+                <Button
+                    android:id="@+id/button_save"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/averia_serif_libre_bold_italic"
+                    android:textColor="#000000"
+                    android:textSize="25sp"
+                    android:background="@drawable/custom_button"
+                    android:shadowColor="#fd662c"
+                    android:shadowDx="0"
+                    android:shadowDy="0"
+                    android:shadowRadius="5"
+                    android:text="@string/back_to_feed"
+                   />
+            </LinearLayout>
+        </RelativeLayout>
+    </ScrollView>
 </RelativeLayout>

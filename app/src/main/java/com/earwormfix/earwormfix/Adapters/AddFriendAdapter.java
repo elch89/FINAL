@@ -19,11 +19,12 @@ import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
 import java.util.ArrayList;
 
 public class AddFriendAdapter extends RecyclerView.Adapter<AddFriendAdapter.ViewHolder> {
-    private ArrayList<Connectivity> connect;
+    private static  final String BASE_URL ="https://earwormfix.com/";
+    private ArrayList<Connectivity> connectivityList;
     private ItemClickListener mClickListener;
     private Context context;
     public AddFriendAdapter(ArrayList<Connectivity> connectivityList, Context context){
-        this.connect = connectivityList;
+        this.connectivityList = connectivityList;
         this.context = context;
     }
     @NonNull
@@ -37,22 +38,21 @@ public class AddFriendAdapter extends RecyclerView.Adapter<AddFriendAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull AddFriendAdapter.ViewHolder viewHolder, int i) {
-        if(connect.get(i).isFriends()){
+        if(connectivityList.get(i).isFriends()){
             viewHolder.mAdd.setClickable(false);
             viewHolder.mAdd.setBackgroundColor(Color.DKGRAY);
             viewHolder.mAdd.setText(R.string.friendsAlready);
         }
-        viewHolder.mName.setText(connect.get(i).getFull_name());
-        viewHolder.mNick.setText(connect.get(i).getName());
-        viewHolder.mEmail.setText(connect.get(i).getEmail());
-        String baseUrl ="https://earwormfix.com/";
-        if(connect.get(i).getPhoto().equals("0")){
+        viewHolder.mName.setText(connectivityList.get(i).getFull_name());
+        viewHolder.mNick.setText(connectivityList.get(i).getName());
+        viewHolder.mEmail.setText(connectivityList.get(i).getEmail());
+
+        if(connectivityList.get(i).getPhoto().equals("0")){
             viewHolder.userAvatar.setImageResource(R.drawable.avatar_dog);
         }
         else{
-            GlideApp.with(context).load(baseUrl+connect.get(i).getPhoto()).into(viewHolder.userAvatar);
+            GlideApp.with(context).load(BASE_URL+connectivityList.get(i).getPhoto()).into(viewHolder.userAvatar);
         }
-        //viewHolder.userAvatar.setImageResource(R.drawable.avatar_girl);// change to photo from server
 
     }
     public void setClickListener(ItemClickListener itemClickListener) {
@@ -60,16 +60,16 @@ public class AddFriendAdapter extends RecyclerView.Adapter<AddFriendAdapter.View
     }
     @Override
     public int getItemCount() {
-        return connect.size();
+        return connectivityList.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
-        public TextView mName,mNick,mEmail;
-        public Button mAdd;
+        private TextView mName,mNick,mEmail;
+        private Button mAdd;
         private ImageView userAvatar;
         ItemClickListener clickListener;
 
-        public ViewHolder(View itemView, ItemClickListener mListener){
+        private ViewHolder(View itemView, ItemClickListener mListener){
             super(itemView);
             clickListener = mListener;
             userAvatar = itemView.findViewById(R.id.imgAvatar);

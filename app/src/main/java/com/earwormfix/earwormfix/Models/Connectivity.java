@@ -16,13 +16,28 @@ public class Connectivity {
     private boolean friends;
     @SerializedName("photo")
     private String photo;
-    public Connectivity(String uid, String name, String full_name, String email, boolean friends, String photo){
+    @SerializedName("error")
+    private boolean err;
+    @SerializedName("error_msg")
+    private String errMsg;
+    public Connectivity(String uid, String name, String full_name, String email, boolean friends,
+                        String photo, boolean err, String errMsg){
         this.email = email;
         this.full_name = full_name;
         this.name = name;
         this.uid = uid;
         this.friends =friends;
         this.photo = photo;
+        this.err =err;
+        this.errMsg =errMsg;
+    }
+
+    public String getErrMsg() {
+        return errMsg;
+    }
+
+    public boolean isErr() {
+        return err;
     }
 
     public String getPhoto() {
@@ -55,6 +70,14 @@ public class Connectivity {
 
     public void setPhoto(String photo) {
         this.photo = photo;
+    }
+
+    public void setErrMsg(String errMsg) {
+        this.errMsg = errMsg;
+    }
+
+    public void setErr(boolean err) {
+        this.err = err;
     }
 
     public void setUid(String uid) {

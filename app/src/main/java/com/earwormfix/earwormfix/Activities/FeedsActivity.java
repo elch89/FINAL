@@ -37,54 +37,64 @@ import com.earwormfix.earwormfix.helpers.SessionManager;
 
 import java.util.Objects;
 
+import static com.earwormfix.earwormfix.AppConfig.CHANNEL_ID;
 
+/**
+ * This is the main activity where most of app is happening
+ * fragments are added to show feed list and personal playlist
+ * */
 public class FeedsActivity extends AppCompatActivity {
-    private FeedsPagerAdapter adapter;
-    private TabLayout tabLayout;
-    private ViewPager viewPager;
+    private static final String EMAIL_ADDRESS = "eli032.eb@gmail.com";
+    private static final String FEED_TITLE = "FEEDS";
+    private static final String MY_FIX_TITLE = "MY FIX";
 
     private SQLiteHandler db;
     private SessionManager session;
-
-
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
-    private NavigationView mNav;
-
     private Dialog mContactDialog;
-
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView( R.layout.activity_feeds);
-        // for API 26+
-        createNotificationChannel();
+
+        // for API 26+, initializes notification on device
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
+            createNotificationChannel();
+        }
+
+        // make phone not go to sleep
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        // set up a customized toolbar, replacing default android one
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
-        mContactDialog = new Dialog(this);
 
-        mDrawerLayout = findViewById(R.id.drawer_layout);
-        mNav = findViewById(R.id.nv);
-        viewPager = (ViewPager) findViewById(R.id.viewPager);
-        tabLayout = (TabLayout) findViewById(R.id.tabLayout);
-
-        // Add a drawer layout for menu toggle
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
-                R.string.open, R.string.close){
-            public void onDrawerClosed(View view){ }
-            public void onDrawerOpened(View drawerView){ }
-        };
-        mDrawerLayout.addDrawerListener(mDrawerToggle);
-        mDrawerToggle.syncState();
+        // Set up the display for custom toolbar
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setLogo(R.drawable.ewf_bg_white);
         getSupportActionBar().setDisplayUseLogoEnabled(true);
 
+        mDrawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
+        NavigationView mNav = (NavigationView)findViewById(R.id.nv);
+        ViewPager viewPager = (ViewPager) findViewById(R.id.viewPager);
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabLayout);
 
-        // set navigation items
+        // Add the drawer layout for menu and set drawer toggle
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
+                R.string.open, R.string.close){
+            // necessary to override?, can do something in background?
+            public void onDrawerClosed(View view){ }
+            public void onDrawerOpened(View drawerView){ }
+        };
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
+        mDrawerToggle.syncState();
+        // init dialog for contact us
+        mContactDialog = new Dialog(this);
+
+        // set navigation view items listener
         mNav.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -120,12 +130,29 @@ public class FeedsActivity extends AppCompatActivity {
         });
 
         // feedPager gives us the swipe effect on both fragments
-        adapter = new FeedsPagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new FeedFragment(), "FEEDS");
-        adapter.addFragment(new MyFixFragment(), "MY FIX");
-        viewPager.setAdapter(adapter);
+        // this part adds fragments to adapter
+        FeedsPagerAdapter fpAdapter = new FeedsPagerAdapter(getSupportFragmentManager());
+        fpAdapter.addFragment(new FeedFragment(), FEED_TITLE);
+        fpAdapter.addFragment(new MyFixFragment(), MY_FIX_TITLE);
+        viewPager.setAdapter(fpAdapter);
         tabLayout.setupWithViewPager(viewPager);
+        //TODO: use this for optimization
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int i, float v, int i1) {
 
+            }
+
+            @Override
+            public void onPageSelected(int i) {
+
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int i) {
+
+            }
+        });
 
         // SqLite database handler
         db = new SQLiteHandler(getApplicationContext());
@@ -148,17 +175,19 @@ public class FeedsActivity extends AppCompatActivity {
      * */
     private void logoutUser() {
         session.setLogin(false);
-
         db.deleteUsers();
         // Launching the login activity
         Intent intent = new Intent(FeedsActivity.this, LoginActivity.class);
         startActivity(intent);
         finish();
     }
+    /**
+     * Inflate the menu; this adds items to the action bar if it is present.
+     * */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+        // adds menu item addFix for uploading a post
         MenuItem signItem = menu.findItem(R.id.addFix);
         signItem.getActionView().setOnClickListener(new View.OnClickListener() {
             @Override
@@ -168,40 +197,36 @@ public class FeedsActivity extends AppCompatActivity {
         });
         return true;
     }
+    /**
+     * Set behaviour when toolbar items are pressed
+     * e.g drawer toggling when menu pressed and add a post pressed
+     * */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(mDrawerToggle.onOptionsItemSelected(item)){
             return true;
         }
-        switch (item.getItemId()) {
-            case R.id.addFix:
-                Intent intent = new Intent(this, AddPost.class);
-                startActivity(intent);
-                return true;
-
-            /*case R.id.action_favorite:
-                // User chose the "message board
-                return true;*/
-
-            default:
-                // If we got here, the user's action was not recognized.
-                // Invoke the superclass to handle it.
-                return super.onOptionsItemSelected(item);
-
+        if(item.getItemId() == R.id.addFix) {
+            // add a post activity
+            Intent intent = new Intent(this, AddPost.class);
+            startActivity(intent);
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
+    /**
+     * once contact us is selected inflates a dialog with
+     * fields to fill in Email message
+     * */
     private void contactPopUp() {
-        TextView txtclose;
-        EditText txtContact, txtFrom, txtSubject;
-        Button btnContact;
 
         mContactDialog.setContentView(R.layout.contact_dialog);
-        txtContact = mContactDialog.findViewById(R.id.txtMessage);
-        txtclose =(TextView) mContactDialog.findViewById(R.id.txt_back);
-        txtFrom = mContactDialog.findViewById(R.id.txtFrom);
-        txtSubject = mContactDialog.findViewById(R.id.txtSubject);
-        btnContact = (Button) mContactDialog.findViewById(R.id.btnOK);
-        txtclose.setOnClickListener(new View.OnClickListener() {
+        EditText mMessage = (EditText)mContactDialog.findViewById(R.id.txtMessage);
+        TextView txtClose =(TextView) mContactDialog.findViewById(R.id.txt_back);
+        EditText txtSubject = (EditText)mContactDialog.findViewById(R.id.txtSubject);
+        Button btnContact = (Button) mContactDialog.findViewById(R.id.btnOK);
+        // Cancels sen email dialog
+        txtClose.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mContactDialog.dismiss();
@@ -212,13 +237,11 @@ public class FeedsActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // Send the feedback and then close pop up
-                String to = "eli032.eb@gmail.com";//change to server email..
-                String from = txtFrom.getText().toString().trim();
                 String sub = txtSubject.getText().toString().trim();
-                String mess = txtContact.getText().toString().trim();
+                String mess = mMessage.getText().toString().trim();
                 Intent mail = new Intent(Intent.ACTION_SENDTO);
                 mail.setData(Uri.parse("mailto:")); // only email apps should handle this
-                mail.putExtra(Intent.EXTRA_EMAIL,new String[]{to});
+                mail.putExtra(Intent.EXTRA_EMAIL,new String[]{EMAIL_ADDRESS});
                 mail.putExtra(Intent.EXTRA_SUBJECT, sub);
                 mail.putExtra(Intent.EXTRA_TEXT, mess);
                 if (mail.resolveActivity(getPackageManager()) != null) {
@@ -227,10 +250,18 @@ public class FeedsActivity extends AppCompatActivity {
                 mContactDialog.dismiss();
             }
         });
-        Objects.requireNonNull(mContactDialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        mContactDialog.show();
+        // Setup background color for dialog
+        if(mContactDialog != null){
+            if(mContactDialog.getWindow()!= null){
+                mContactDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            }
+            mContactDialog.show();
+        }
+
     }
-    // Closes drawer layout on back pressed
+     /**
+      * Closes drawer layout on back pressed
+      * */
     @Override
     public void onBackPressed() {
         if (this.mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
@@ -239,17 +270,22 @@ public class FeedsActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
+    /**
+     *  Create the NotificationChannel, but only on API 26+ because
+     *  the NotificationChannel class is new and not in the support library.
+     *  It is important to do this here and not in service
+     *  because setting up a channel can take time.
+     * */
     private void createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Earwormfix";
             String description = "notify data stream";
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel("some_chanel_id", name, importance);
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
+            // Register the channel with the system;
+            // the importance can't be change or other notification behaviors after this
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }

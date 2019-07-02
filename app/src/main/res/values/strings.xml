@@ -8,8 +8,8 @@
     <string name="user_id">User #1</string>
     <string name="open">slidingMenu</string>
     <string name="close">slidingMenu</string>
-    <string name="upload_video">קובץ מהטלפון</string>
-    <string name="make_video">הקלטה</string>
+    <string name="upload_video">העלה מהמכשיר</string>
+    <string name="make_video">הקלט</string>
     <string name="read_file">This app needs access to your file storage so that it can read video.</string>
     <string name="ok">OK</string>
     <string name="cancel">CANCEL</string>
@@ -17,6 +17,7 @@
     <string name="dialog_title">Confirmation</string>
     <string name="friendsAlready">friends</string>
     <string name="upload_pic">Upload picture</string>
+    <string name="back_to_feed">back to feed</string>
 
     <!--<div>Icons made by <a href="https://www.flaticon.com/authors/gregor-cresnar" title="Gregor Cresnar">Gregor Cresnar</a> from <a href="https://www.flaticon.com/" 		    title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" 		    title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
     <div>Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" 		    title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" 		    title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>

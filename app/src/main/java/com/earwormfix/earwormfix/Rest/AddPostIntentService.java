@@ -18,9 +18,9 @@ import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.earwormfix.earwormfix.Activities.FeedsActivity;
 import com.earwormfix.earwormfix.helpers.SQLiteHandler;
@@ -32,6 +32,7 @@ import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedExceptio
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPReply;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -40,7 +41,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Objects;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -48,15 +48,22 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import static com.earwormfix.earwormfix.AppConfig.CHANNEL_ID;
+
 /**
  * Preform network calls and compression of video file
- * in background thread in service.
+ * in background threads in service.
  * Then broadcast to fragment that completed.
  * */
 public class AddPostIntentService extends IntentService {
     public static final String COMPRESS = "compress";
+    public static final String UPLOAD_FILE = "upload";
+    public static final String SEND_DATA = "send";
+
     private static final String TAG = AddPostIntentService.class.getSimpleName();
     private static final String APP_NAME = "EarwormFix";
+    private static final String EXTENSION_JPG = ".jpg";
     private SQLiteHandler db;
     private File imgFile;
     private String selectedVideoPath;
@@ -70,60 +77,77 @@ public class AddPostIntentService extends IntentService {
     }
     public AddPostIntentService(String name) {
         super(name);
-        // You don’t want your service to redeliver its process if in any case phone
+        // Set service to redeliver its process if in any case phone
         // shutdown and application get started
-        // If you require such action you can set it to true
-        setIntentRedelivery(false);// is default
-
+        setIntentRedelivery(true);
+    }
+    @Override
+    public void onCreate() {
+        String notiContent = "מעלה את הסרטון\n פעולה זו יכולה לקחת זמן";
+        sendNotificationIntent(notiContent);
+        // initialize compression library
+        initFfmpeg();
+        db = new SQLiteHandler(this);
     }
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         int SDK_INT = android.os.Build.VERSION.SDK_INT;
+        // good for debugging
         if (SDK_INT > 8)
         {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-                    .permitAll().build();
+                    /*.permitAll()*/
+                    .penaltyLog()
+                    .build();
             StrictMode.setThreadPolicy(policy);
-
-
         }
-        String notiContent = "מעלה לך את הסרטון, פעולה זו יכולה לקחת זמן";
-        sendNotificationIntent(APP_NAME,notiContent);
-        db = new SQLiteHandler(this);
-        String intentAction = Objects.requireNonNull(intent).getAction();
-        initFFmpeg();
-        selectedVideoPath = intent.getStringExtra("path_to_destination");
-        pathToStoredVideo = intent.getStringExtra("path_to_vid");
-        mSaySomething = intent.getStringExtra("mSaySomething");
-        generatedFilename = intent.getStringExtra("generatedFilename");
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)*/
-            executeCompression();
-       /* else{// skip compressing
-            bitmapToFile();
-            HashMap<String, String> user = db.getUserDetails();
-            String userId = user.get("uid");
-            AsyncTaskFtp.TaskListener listener = result ->
-            {
-                if(result.equals("Success")){
+
+        if(intent != null){
+            String action = intent.getAction();
+            // get data from AddPost
+            pathToStoredVideo = intent.getStringArrayListExtra("params").get(0);//intent.getStringExtra("path_to_vid");
+            selectedVideoPath = intent.getStringArrayListExtra("params").get(1);//intent.getStringExtra("path_to_destination");
+            mSaySomething = intent.getStringArrayListExtra("params").get(2);//intent.getStringExtra("mSaySomething");
+            generatedFilename = intent.getStringArrayListExtra("params").get(3);//intent.getStringExtra("generatedFilename");
+            // Start compressing the video file
+            if (action != null) {
+                if(action.equals(COMPRESS)){
+                    executeCompression();
+                }
+                else if(action.equals(UPLOAD_FILE)){
+                    bitmapToFile();
+                    if(imgFile !=null) {
+
+                        // Upload file using ftp(for large files)
+                        HashMap<String, String> user = db.getUserDetails();
+                        String userId = user.get("uid");
+                        AsyncTaskFtp.TaskListener listener = result ->
+                        {
+                            if(!result){
+                                broadcastResult(false);
+                            }
+                        };
+                        AsyncTaskFtp ftpTask = new AsyncTaskFtp(listener);
+                        ftpTask.execute(selectedVideoPath,userId);
+
+                    }
+                    else {
+                        broadcastResult(false);
+                    }
+                }
+                else if(action.equals(SEND_DATA)){
                     uploadVideoDetailsToServer();
                 }
-                else{
-                    broadcastResult(false);
-                }
-            };
-            AsyncTaskFtp ftpTask = new AsyncTaskFtp(listener);
-            ftpTask.execute(pathToStoredVideo,userId);
-        }*/
+            }
 
-
-
+        }
 
     }
-    private void initFFmpeg(){
-        FFmpeg fmpeg =FFmpeg.getInstance(getApplicationContext());
+    private void initFfmpeg(){
+        FFmpeg ffmpeg =FFmpeg.getInstance(getApplicationContext());
         try {
-            fmpeg.loadBinary(new LoadBinaryResponseHandler(){
+            ffmpeg.loadBinary(new LoadBinaryResponseHandler(){
                 @Override
                 public void onStart() {}
 
@@ -141,10 +165,12 @@ public class AddPostIntentService extends IntentService {
         }
     }
     private void executeCompression(){
-        Log.i("PATH","path to video: "+pathToStoredVideo);
-        Log.i("PATH","destination path: "+selectedVideoPath);
-        //ffmpeg -y -i input.mp4 -s 480x320 -r 20 -c:v libx264 -preset ultrafast -c:a copy -me_method zero -tune fastdecode -tune zerolatency -strict -2 -b:v 1000k -pix_fmt yuv420p output.mp4
-        String command = "-n -i "+pathToStoredVideo+" -s 480x320 -r 24 -c:v libx264 -preset ultrafast -c:a copy -me_method zero -tune fastdecode -tune zerolatency -strict -2 -b:v 1000k -pix_fmt yuv420p " +selectedVideoPath;
+        Log.i(TAG,"PATH to video is "+pathToStoredVideo);
+        Log.i(TAG,"Destination PATH is "+selectedVideoPath);
+        String command = "-n -i "+pathToStoredVideo+
+                " -s 480x320 -r 24 -c:v libx264 -preset ultrafast -c:a copy -me_method zero " +
+                "-tune fastdecode -tune zerolatency -strict -2 -b:v 1000k -pix_fmt yuv420p " +
+                selectedVideoPath;
 
         String[] args = command.split(" ");
         for (int i= 0;i<args.length;i++){
@@ -168,9 +194,9 @@ public class AddPostIntentService extends IntentService {
                 @Override
                 public void onSuccess(String message) {
                     Log.d(TAG, "Success: "+message);
-                    // Start a thread to convert bitmap to file-
-                    // and then send data to server
-                    bitmapToFile();
+                    // Start a thread to convert bitmap to file
+                    // and then send file to server via FTP
+                    /*bitmapToFile();
                     if(imgFile !=null) {
 
                         // Upload file using ftp(for large files)
@@ -178,7 +204,8 @@ public class AddPostIntentService extends IntentService {
                         String userId = user.get("uid");
                         AsyncTaskFtp.TaskListener listener = result ->
                         {
-                            if(result.equals("Success")){
+                            if(result){
+                                // on success of ftp transmit, send other data to server
                                 uploadVideoDetailsToServer();
                             }
                             else{
@@ -191,7 +218,7 @@ public class AddPostIntentService extends IntentService {
                     }
                     else {
                         broadcastResult(false);
-                    }
+                    }*/
                 }
                 @Override
                 public void onFinish() {
@@ -202,7 +229,7 @@ public class AddPostIntentService extends IntentService {
 
         }
     }
-    private String tempFile;
+
     /**
      * Uploading the video to server
      * */
@@ -215,15 +242,13 @@ public class AddPostIntentService extends IntentService {
         RequestBody imageBody = RequestBody.create(MediaType.parse("image/*"), imgFile);
         MultipartBody.Part iFile = MultipartBody.Part.createFormData("image", imgFile.getName(), imageBody);
 
-
-
         // get user unique id
         HashMap<String, String> user = db.getUserDetails();
         String userId = user.get("uid");
         String desc = mSaySomething;
         VideoUploadApi vInterface = VideoUploadFactory.create();
-        // Video path on server file system
-        String vidPathBackEnd = generatedFilename+ ".mp4";
+
+
         // get video length
         String time = "Unavailable";
         try {
@@ -236,12 +261,13 @@ public class AddPostIntentService extends IntentService {
             e.printStackTrace();
             broadcastResult(false);
         }
-
+        // Video path on server file system
+        String vidFileName = generatedFilename+ ".mp4";
         // create a map of data to pass along
         RequestBody uid = createPartFromString(userId);
         RequestBody len = createPartFromString(time);
         RequestBody describe = createPartFromString(desc);
-        RequestBody vidPath = createPartFromString(vidPathBackEnd);
+        RequestBody vidPath = createPartFromString(vidFileName);
 
         HashMap<String, RequestBody> map = new HashMap<>();
         map.put("path",vidPath);
@@ -256,17 +282,23 @@ public class AddPostIntentService extends IntentService {
                 if(response.isSuccessful()){
                     ResultObject result = response.body();
                     if(result!=null) {
-                        Log.d(TAG, "result " + result.getSuccess());
+                        if(result.isStat()){
+                            Log.e(TAG, "Error at server " + result.getSuccess());
+                            broadcastResult(false);
+                        }
+                        else {
+                            Log.i(TAG, "result " + result.getSuccess());
+                            broadcastResult(true);
+                        }
                     }
 
                 }
-                Log.d(TAG, "response code " + response.code());
-                // make as cache in future
+                Log.i(TAG, "response code " + response.code());
+                // delete compressed video from storage
                 if(!deleteTemp(selectedVideoPath)){
                     Log.e(TAG, "Failed to remove file");
                 }
 
-                broadcastResult(true);
 
             }
             @Override
@@ -292,33 +324,20 @@ public class AddPostIntentService extends IntentService {
         bm.recycle();
         return resizedBitmap;
     }
-    // images only
+    // images only, saves a thumbnail in phone
     private void bitmapToFile(){
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         Bitmap thumb,resized;
-        /*if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){*/
-            thumb = ThumbnailUtils.createVideoThumbnail(selectedVideoPath,
+        thumb = ThumbnailUtils.createVideoThumbnail(selectedVideoPath,
                     MediaStore.Images.Thumbnails.MINI_KIND);
-       /* }*/
-        /*else{
-            thumb = ThumbnailUtils.createVideoThumbnail( pathToStoredVideo,
-                    MediaStore.Images.Thumbnails.MINI_KIND);
-        }*/
+
         if(thumb!=null){
             resized = getResizedBitmap(thumb,120,100);
         }
-        else return;
+        else {return;}
 
         resized.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        if(generatedFilename != null){
-            imgFile = new File(setFileDestinationPath(".jpg"));
-        }
-        else {
-            Toast.makeText(getApplicationContext(),"An error has happened",Toast.LENGTH_LONG).show();
-            broadcastResult(false);
-            return;
-        }
-
+        imgFile = new File(setFileDestinationPath());
         try {
             FileOutputStream fo = new FileOutputStream(imgFile);
             fo.write(bytes.toByteArray());
@@ -332,10 +351,11 @@ public class AddPostIntentService extends IntentService {
     private void broadcastResult(boolean stat){
         Intent in = new Intent(COMPRESS);
         if(stat){
-            sendNotificationIntent(APP_NAME,"הסתיימה ההעלאה");
+            sendNotificationIntent("הסתיימה ההעלאה");
         }
         else {
-            sendNotificationIntent(APP_NAME,"ארעה שגיעה בזמן ההעלאה");
+            // stop queue?
+            sendNotificationIntent("ארעה שגיעה בזמן ההעלאה");
         }
         // Put extras into the intent as usual
         in.putExtra("resultCode", Activity.RESULT_OK);
@@ -347,31 +367,45 @@ public class AddPostIntentService extends IntentService {
         File file = new File(path);
         return file.delete();
     }
-    private String setFileDestinationPath(String extension){
+    // sets where to put thumbnail and temp video will be saved on device
+    private String setFileDestinationPath(){
         String filePathEnvironment = Environment.getExternalStorageDirectory().getAbsolutePath();
-        Log.d(TAG, "Full path edited " + filePathEnvironment + "/earwormfix/" + generatedFilename + extension);
-        return filePathEnvironment+ "/earwormfix/" + generatedFilename + extension;
+        Log.d(TAG, "Full path edited " + filePathEnvironment + "/earwormfix/" + generatedFilename + EXTENSION_JPG);
+        return filePathEnvironment+ "/earwormfix/" + generatedFilename + EXTENSION_JPG;
     }
-    private static class AsyncTaskFtp extends AsyncTask<String, String, String> {
+
+
+    private static class AsyncTaskFtp extends AsyncTask<String, String, Void> {
         // string[0] ---> selectedVideoPath
         // strings[1] ---> userId
         // This is the reference to the associated listener
         public interface TaskListener {
-            public void onFinished(String result);
+            void onFinished(boolean result);
         }
 
         private final TaskListener taskListener;
-        public AsyncTaskFtp(TaskListener listener) {
+        AsyncTaskFtp(TaskListener listener) {
             // The listener reference is passed in through the constructor
             this.taskListener = listener;
         }
         @Override
-        protected String doInBackground(String... strings) {
+        protected Void doInBackground(String... strings) {
+            // Send file via ftp on asyncTask
             FTPClient client = new FTPClient();
             try {
                 client.connect("ftp.earwormfix.com", 21);
-                client.login("u561050024.vm229px", "NFB6kBZXWrg5");
+                client.login("FTPUser", "XXXXX");// remember to remove from git!
 
+                client.sendNoOp(); //used so server timeout exception will not rise
+                int reply = client.getReplyCode();
+                if(!FTPReply.isPositiveCompletion(reply)){
+                    client.disconnect();
+                    Log.e(TAG,"FTP server refuse connection Code- "+ reply);
+                    this.taskListener.onFinished(false);
+                    return null;
+
+                }
+                client.enterLocalPassiveMode();//Switch to passive mode
                 client.setFileType(FTP.BINARY_FILE_TYPE, FTP.BINARY_FILE_TYPE);
                 client.setFileTransferMode(FTP.BINARY_FILE_TYPE);
                 String remoteFile = "post/"+strings[1] +
@@ -380,64 +414,59 @@ public class AddPostIntentService extends IntentService {
                 File videoFile = new File(strings[0]);
                 InputStream inputStream = new FileInputStream(videoFile);
 
-                Log.d(TAG,"storing....");
-                boolean done = client.storeFile(remoteFile, inputStream);
+                Log.i(TAG,"storing...");
+
+                if (client.storeFile(remoteFile, inputStream)) {
+                    Log.i(TAG,"Done!!!");
+                }
                 inputStream.close();
-                if (done) {
-                    Log.d(TAG,"Done!!!!!!!!!!!!!!!");
-                }
-                else {
-                    this.taskListener.onFinished("Fail");
-                }
+                //logout will close the connection
+                client.logout();
             } catch (IOException e) {
                 e.printStackTrace();
             }
             return null;
         }
         @Override
-        protected void onPostExecute(String result) {
+        protected void onPostExecute(Void result) {
             super.onPostExecute(result);
             if(this.taskListener!=null){
-                this.taskListener.onFinished("Success");
+                this.taskListener.onFinished(true);
             }
         }
     }
 
-    private void sendNotificationIntent(String notiTitle, String notiContent){
+    private void sendNotificationIntent( String notiContent){
         Intent intent = new Intent(this, FeedsActivity.class);
-        intent.putExtra("testing","testing");
         int uniqueInt = (int) (System.currentTimeMillis() & 0xfffffff);
         PendingIntent pIntent = PendingIntent.getActivity(this, uniqueInt, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-// build notification
-// the addAction re-use the same intent to keep the example short
-        Notification n  = null;
+        // build notification
+        Notification n;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            n = new Notification.Builder(AddPostIntentService.this)
-                    .setTicker("testing")
-                    .setContentTitle(notiTitle)
+            n = new NotificationCompat.Builder(AddPostIntentService.this,CHANNEL_ID)
+                    .setContentTitle(APP_NAME)
                     .setContentText(notiContent)
-                    .setSmallIcon(android.R.drawable.ic_menu_view)
+                    .setSmallIcon(android.R.drawable.ic_menu_upload_you_tube)
                     .setContentIntent(pIntent)
                     .setAutoCancel(true)
-                    .setChannelId("some_chanel_id")
+                    .setChannelId(CHANNEL_ID)
                     /*.setWhen(System.currentTimeMillis())*/
                     .build();
         }
         else{
             n = new Notification.Builder(this)
-                    .setTicker("testing")
-                    .setContentTitle(notiTitle)
+                    .setTicker("File uploading")
+                    .setContentTitle(APP_NAME)
                     .setContentText(notiContent)
-                    .setSmallIcon(android.R.drawable.ic_menu_view)
+                    .setSmallIcon(android.R.drawable.ic_menu_upload_you_tube)
                     .setContentIntent(pIntent)
                     .setAutoCancel(true)
                     .setPriority(Notification.PRIORITY_DEFAULT)
                     /*.setWhen(System.currentTimeMillis())*/
                     .build();
         }
-        //NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        NotificationManager noti = (NotificationManager)this.getSystemService(Context.NOTIFICATION_SERVICE);
-        noti.notify(0, n);
+        NotificationManager notificationManager = (NotificationManager)this.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(0, n);
     }
 }

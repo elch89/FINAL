@@ -17,14 +17,6 @@
         android:textColor="@color/colorWhite"
         android:textStyle="bold" />
     <EditText
-        android:id="@+id/txtFrom"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="From"
-        android:textColor="@android:color/white"
-        android:textColorHint="@color/colorWhite"/>
-
-    <EditText
         android:id="@+id/txtSubject"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
