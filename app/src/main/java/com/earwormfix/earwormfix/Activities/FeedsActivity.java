@@ -85,9 +85,6 @@ public class FeedsActivity extends AppCompatActivity {
         // Add the drawer layout for menu and set drawer toggle
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                 R.string.open, R.string.close){
-            // necessary to override?, can do something in background?
-            public void onDrawerClosed(View view){ }
-            public void onDrawerOpened(View drawerView){ }
         };
         mDrawerLayout.addDrawerListener(mDrawerToggle);
         mDrawerToggle.syncState();

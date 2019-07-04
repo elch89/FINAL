@@ -20,6 +20,7 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
+
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/profile_recycler_view"
                 android:layout_width="match_parent"
@@ -30,6 +31,25 @@
                 android:layout_marginBottom="3dp"
                 android:padding="10dp"
                 android:scrollbars="vertical" />
+            <ProgressBar
+                android:id="@+id/progress_update"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@android:style/Widget.ProgressBar.Small"
+                android:visibility="gone"
+                />
+            <TextView android:id="@+id/link_remove"
+                android:fontFamily="@font/averia_serif_libre_bold_italic"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dip"
+                android:layout_marginBottom="40dip"
+                android:text="להסרת המשתמש שלי"
+                android:gravity="center"
+                android:textSize="20sp"
+                android:textColor="#fd662c"
+                android:onClick="onClick"
+                android:clickable="true"/>
 
             <Button
                 android:id="@+id/btn_back_to_feeds"

@@ -12,7 +12,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
@@ -30,14 +29,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.earwormfix.earwormfix.Adapters.FeedAdapter;
-import com.earwormfix.earwormfix.Adapters.FeedViewModel;
-import com.earwormfix.earwormfix.Adapters.SharedViewModel;
-import com.earwormfix.earwormfix.Models.Post;
+import com.earwormfix.earwormfix.Rest.DeleteApi;
+import com.earwormfix.earwormfix.viewModels.FeedViewModel;
+import com.earwormfix.earwormfix.viewModels.SharedViewModel;
 import com.earwormfix.earwormfix.Models.MyFix;
+import com.earwormfix.earwormfix.Models.Post;
 import com.earwormfix.earwormfix.R;
-import com.earwormfix.earwormfix.Rest.AddPostIntentService;
+import com.earwormfix.earwormfix.service.AddPostIntentService;
 import com.earwormfix.earwormfix.Rest.RestApi;
-import com.earwormfix.earwormfix.Rest.ResultObject;
+import com.earwormfix.earwormfix.Models.ResultObject;
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
 import com.earwormfix.earwormfix.Utilitties.NetworkState;
 import com.earwormfix.earwormfix.helpers.SQLiteHandler;
@@ -46,7 +46,6 @@ import java.util.HashMap;
 import java.util.Objects;
 
 import im.ene.toro.PlayerSelector;
-import im.ene.toro.ToroUtil;
 import im.ene.toro.media.PlaybackInfo;
 import im.ene.toro.media.VolumeInfo;
 import im.ene.toro.widget.Container;
@@ -59,75 +58,68 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static android.app.Activity.RESULT_CANCELED;
 import static android.app.Activity.RESULT_OK;
-import static android.support.v7.widget.RecyclerView.SCROLL_STATE_IDLE;
 import static im.ene.toro.media.PlaybackInfo.INDEX_UNSET;
 import static im.ene.toro.media.PlaybackInfo.TIME_UNSET;
 
 
 public class FeedFragment extends Fragment  implements ItemClickListener {
     private static final String SERVER_PATH = "https://earwormfix.com";
-    Container container;
-    FeedAdapter adapter;
-    RecyclerView.LayoutManager layoutManager;
-    SQLiteHandler db;
+    private static final String TAG = FeedFragment.class.getSimpleName();
+    private Container container;
+    private FeedAdapter adapter;
+    private RecyclerView.LayoutManager layoutManager;
+    private SQLiteHandler db;
     private SharedViewModel model;
     private String selectedPost;
     private LinearLayout err;
-    private Button retry;
     private SwipeRefreshLayout refreshLayout;
     private FeedViewModel mFeedViewModel;
     private Dialog mDialog;
+    private HashMap<String, String> user;
 
     public FeedFragment() {} // Required empty public constructor
-
-    private TextView subNew;
     @SuppressLint("CutPasteId")
     public void onViewCreated(@NonNull View views, Bundle savedInstanceState) {
         refreshLayout = views.findViewById(R.id.swipe_main);
         container = views.findViewById(R.id.container);
         err = views.findViewById(R.id.net_err);
-        retry = views.findViewById(R.id.net_err).findViewById(R.id.retry_network);
+        Button retry = views.findViewById(R.id.net_err).findViewById(R.id.retry_network);
         err.setVisibility(View.INVISIBLE);
-
-        //************************************//
         // Initialise comment dialog
         mDialog = new Dialog(Objects.requireNonNull(getActivity()));
-
-        //***********************************//
         // Set layout manager
         layoutManager = new LinearLayoutManager(getActivity());
         adapter = new FeedAdapter(PlayerSelector.DEFAULT ,getActivity());
-      /*  container.setAdapter(adapter);*/
         container.setPlayerSelector(adapter);
         container.setCacheManager(adapter);
-        //*****************Sqlite initializer******************************************//
         db = new SQLiteHandler(getActivity());
-        //*******The following initializes the video view in a container************************//
         container.setLayoutManager(layoutManager);
-
+        user = db.getUserDetails();
         container.setPlayerDispatcher(__ -> 500); // The playback will be delayed 500ms.
+        // volume is initialized as off on creation
         container.setPlayerInitializer(order -> {
             VolumeInfo volumeInfo = new VolumeInfo(false, 0f);
             return new PlaybackInfo(INDEX_UNSET, TIME_UNSET, volumeInfo);
         });
-        // Only when you use Container inside a CoordinatorLayout and depends on Behavior.
-        ToroUtil.wrapParamBehavior(container, () -> container.onScrollStateChanged(SCROLL_STATE_IDLE));
-
-        //*****************************//
         // Sets up a listener for comments, fixed and add pressed inside view holders
         adapter.setClickListener(this);
-        //---------------Observe live data from server(data base)----------------------//
+        // set view models for observers
         model = ViewModelProviders.of(getActivity()).get(SharedViewModel.class);
         mFeedViewModel = ViewModelProviders.of(this).get(FeedViewModel.class);
         fetchFeeds();
+        // retry button in case network not available on device
         retry.setOnClickListener(v -> {
             if(isOnline()){
                 mFeedViewModel.refresh();
+                initContainer();
                 err.setVisibility(View.INVISIBLE);
                 container.setVisibility(View.VISIBLE);
             }
         });
-        refreshLayout.setOnRefreshListener(()->mFeedViewModel.refresh());
+        refreshLayout.setOnRefreshListener(()-> {
+            mFeedViewModel.refresh();
+            initContainer();
+        });
         container.setAdapter(adapter);
 
     }
@@ -135,14 +127,10 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
     @Override
     public void onResume() {
         super.onResume();
-        Log.d("ON_RESUME","observing service");
+        Log.i(TAG,"observing service");
         // Register for the particular broadcast based on ACTION string
         IntentFilter filter = new IntentFilter(AddPostIntentService.COMPRESS);
         LocalBroadcastManager.getInstance(Objects.requireNonNull(getActivity())).registerReceiver(testReceiver, filter);
-        String quote = (String)getActivity().getIntent().getStringExtra("testing");
-        Log.d("ON_RESUME"," " +quote);
-
-
     }
     @Override
     public void onPause() {
@@ -150,7 +138,7 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
         // Unregister the listener when the application is paused
         LocalBroadcastManager.getInstance(Objects.requireNonNull(getActivity())).unregisterReceiver(testReceiver);
     }
-    // Define the callback for what to do when data is received
+    /**Define the callback for what to do when data is received*/
     private BroadcastReceiver testReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -160,6 +148,7 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
                 if(resultValue){
                     Toast.makeText(getContext(),"הפוסט הועלה בהצלחה",Toast.LENGTH_LONG).show();
                     mFeedViewModel.refresh();
+                    initContainer();
                 }
                 else{
                     Toast.makeText(getContext(),"ארעה שגיאה בהעלאת הפוסט",Toast.LENGTH_LONG).show();
@@ -171,8 +160,9 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup containerP, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_feed, containerP, false);
     }
-
-
+    /**
+     * fragment visibility setup
+     * */
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser && getView()!=null);
@@ -194,49 +184,50 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
         // a popup window for adding a comment is inflated:
         submitComment(view, position);
     }
-    private Parcelable recyclerViewState;
     @Override
     public  void  onFixClick(View view, int position){
-        selectedPost = adapter.getFeedAt(position).getPid();
-        sendFixed(selectedPost);
-        view.setClickable(false);
-        initContainer();
+        String[] params = {adapter.getFeedAt(position).getPid()};
+        retrofitPost(params);
     }
     // Add to myfix list
     @Override
-    public void onSubmitEdit(View view, int position) {
+    public void onItemClick(View view, int position) {
         // add to list
-        Log.e("DEBUG", "add to list clicked");
-        Post selectedView = adapter.getFeedAt(position);
-        addToPlaylist(selectedView);
-        MyFix myFix = new MyFix(1,selectedView.getDescription(),selectedView.getUrl(),selectedView.getThumbnail(),false,"");
+        Post post = adapter.getFeedAt(position);
+        String[] params ={post.getDescription(), post.getUrl(), post.getThumbnail()};
+        retrofitPost(params);
+        MyFix myFix = new MyFix(1,post.getDescription(),post.getUrl(),post.getThumbnail(),false,"");
         model.select(myFix);
 
     }
+    @Override
+    public void onDeleteClick(View view, int position){
+        String userId = user.get("uid");
+        Post post = adapter.getFeedAt(position);
+        String[] params ={"0",post.getPid(),post.getUrl(),post.getThumbnail()};
+        if(post.getUid().equals(userId)){
+            retrofitPost(params);
+        }
+
+    }
+
 
     private void submitComment(View v, int position) {
-        TextView txtclose;
-        EditText txtComment;
-        Button btnComment;
-
         mDialog.setContentView(R.layout.comment_dialog);
-        txtComment = mDialog.findViewById(R.id.inp_commemt);
-        txtclose =(TextView) mDialog.findViewById(R.id.txtclose);
-        btnComment = (Button) mDialog.findViewById(R.id.commenting);
-        txtclose.setOnClickListener(v1 -> mDialog.dismiss());
-
+        EditText txtComment = mDialog.findViewById(R.id.inp_commemt);
+        TextView txtClose =(TextView) mDialog.findViewById(R.id.txtclose);
+        Button btnComment = (Button) mDialog.findViewById(R.id.commenting);
+        txtClose.setOnClickListener(v1 -> mDialog.dismiss());
         // comment is submitted on click
         btnComment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Add the comment to server and then close pop up, and invalidate datasource,
-                // to refresh page
+                // Add the comment to server and then close pop up, and invalidate data source
                 selectedPost = adapter.getFeedAt(position).getPid();
                 if(selectedPost!=null){
                     // Find the post id of selected post
-                    sendComment(txtComment.getText().toString(),selectedPost);
-                    initContainer();
-
+                    String[] params = {adapter.getFeedAt(position).getPid(), txtComment.getText().toString()};
+                    retrofitPost(params);
                 }
                 else{// Means feeds list is empty
                     Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),"Failed to add comment",Toast.LENGTH_LONG).show();
@@ -248,12 +239,15 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
         Objects.requireNonNull(mDialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         mDialog.show();
     }
+    /**
+     * initialize container after refresh
+     * */
     public void initContainer(){
         container.setPlayerSelector(adapter);
         container.setCacheManager(adapter);
         container.setLayoutManager(layoutManager);
 
-        container.setPlayerDispatcher(__ -> 500); // The playback will be delayed 500ms.
+        container.setPlayerDispatcher(__ -> 500);
         container.setPlayerInitializer(order -> {
             VolumeInfo volumeInfo = new VolumeInfo(false, 0f);
             return new PlaybackInfo(INDEX_UNSET, TIME_UNSET, volumeInfo);
@@ -262,136 +256,20 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
 
     }
 
-
     @NonNull
     private RequestBody createPartFromString(String descriptionString) {
         return RequestBody.create(
                 okhttp3.MultipartBody.FORM, descriptionString);
     }
-    private void sendComment(String inp, String post_id){
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(SERVER_PATH)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        // get user unique id
-        HashMap<String, String> user = db.getUserDetails();
-        String userId = user.get("uid");
-        RestApi vInterface = retrofit.create(RestApi.class);
-        RequestBody uid = createPartFromString(userId);
-        RequestBody pid = createPartFromString(post_id);
-        RequestBody input = createPartFromString(inp);
-        // Map post parameters
-        HashMap<String, RequestBody> map = new HashMap<>();
-        map.put("comment", input);
-        map.put("uid", uid);
-        map.put("pid", pid);
-        // Call restApi
-        Call<ResultObject> serverCom = vInterface.sendRequest(map);
-        serverCom.enqueue(new Callback<ResultObject>() {
-            @Override
-            public void onResponse(Call<ResultObject> call, Response<ResultObject> response) {
-                if(response.isSuccessful()){
-                    ResultObject result = response.body();
-                    if(!Objects.requireNonNull(result).isStat()){
-                        Log.e("SEND_FIX", " Send fix error");
-                    }
-                    Log.i("SEND_COMMENT", " "+ Objects.requireNonNull(result).getSuccess());
-                    mFeedViewModel.refresh();
-                }
-            }
-            @Override
-            public void onFailure(Call<ResultObject> call, Throwable t) {
-                Log.e("SEND_COMMENT",t.getMessage());
-            }
-        });
-
-    }
-
-    private void sendFixed(String post_id){
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(SERVER_PATH)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        // get user unique id
-
-        RestApi vInterface = retrofit.create(RestApi.class);
-
-        RequestBody pid = createPartFromString(post_id);
-
-        // Map post parameters
-        HashMap<String, RequestBody> map = new HashMap<>();
-        map.put("fixed", pid);
-        // Call restApi
-        Call<ResultObject> serverCom = vInterface.sendRequest(map);
-        serverCom.enqueue(new Callback<ResultObject>() {
-            @Override
-            public void onResponse(Call<ResultObject> call, Response<ResultObject> response) {
-                if(response.isSuccessful()){
-                    ResultObject result = response.body();
-                    Log.i("SEND_FIX", " "+Objects.requireNonNull(result).getSuccess());
-                    if(!result.isStat()){
-                        Log.e("SEND_FIX", " Send fix error");
-                    }
-                }
-                mFeedViewModel.refresh();
-            }
-
-            @Override
-            public void onFailure(Call<ResultObject> call, Throwable t) {
-                    Log.e("SEND_FIX",t.getMessage());
-            }
-        });
-    }
-
-    private void addToPlaylist(Post post){
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(SERVER_PATH)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        HashMap<String, String> user = db.getUserDetails();
-        String userId = user.get("uid");
-
-        RestApi vInterface = retrofit.create(RestApi.class);
-        RequestBody uid = createPartFromString(userId);
-        RequestBody description = createPartFromString(post.getDescription());
-        RequestBody vidUrl = createPartFromString(post.getUrl());
-        RequestBody thumbUrl = createPartFromString(post.getThumbnail());
-
-        // Map post parameters
-        HashMap<String, RequestBody> map = new HashMap<>();
-        map.put("uid", uid);
-        map.put("desc", description);
-        map.put("vid", vidUrl);
-        map.put("thumb", thumbUrl);
-        // Call restApi
-        Call<ResultObject> serverCom = vInterface.sendRequest(map);
-        serverCom.enqueue(new Callback<ResultObject>() {
-            @Override
-            public void onResponse(Call<ResultObject> call, Response<ResultObject> response) {
-                if(response.isSuccessful()){
-                    ResultObject result = response.body();
-                    Log.i("ADD_LIST", " "+ Objects.requireNonNull(result).getSuccess());
-                    Toast.makeText(getContext(),"השיר נוסף בהצלחה לרשימת ההשמעה", Toast.LENGTH_LONG).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResultObject> call, Throwable t) {
-                Log.e("ADD_LIST",t.getMessage());
-            }
-        });
-
-    }
-
 
     private void fetchFeeds(){
         mFeedViewModel.getPagedListLiveData().observe(getViewLifecycleOwner(), feeds -> {
-            Log.d("Observe","observing data");
+            Log.i(TAG,"observing data");
             adapter.submitList(feeds);
             refreshLayout.setRefreshing(false);
         });
         mFeedViewModel.getNetworkState().observe(getViewLifecycleOwner(), networkState -> {
-            Log.d("LIVE", "Network State Change   -"+networkState.getMsg());
+            Log.i(TAG, "Network State Change   -"+ Objects.requireNonNull(networkState).getMsg());
             // In case there has been a network error show retry and invalidate data source
             if(networkState.getStatus() == NetworkState.Status.FAILED && !isOnline()){
                 err.setVisibility(View.VISIBLE);
@@ -407,5 +285,95 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
         return (networkInfo != null && networkInfo.isConnected());
     }
 
+    private void retrofitPost(String ...params){
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(SERVER_PATH)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        String userId = user.get("uid");
 
+        DeleteApi dIn = null;
+        RestApi vInterface = null;
+        if(params.length == 4){
+            dIn  = retrofit.create(DeleteApi.class);
+        }
+        else {
+           vInterface = retrofit.create(RestApi.class);
+        }
+
+        // Map post parameters
+        HashMap<String, RequestBody> map = new HashMap<>();
+        switch (params.length){
+
+            case 1:
+                //send fixed
+                    RequestBody pid = createPartFromString(params[0]);
+                    map.put("fixed", pid);
+                    break;
+
+            case 2:// comment
+
+                    RequestBody uid1 = createPartFromString(userId);
+                    RequestBody pid1 = createPartFromString(params[0]);
+                    RequestBody input = createPartFromString(params[1]);
+                    map.put("comment", input);
+                    map.put("uid", uid1);
+                    map.put("pid", pid1);
+                    break;
+
+            case 3:
+                // add to list
+                    RequestBody uid = createPartFromString(userId);
+                    RequestBody description = createPartFromString(params[0]);
+                    RequestBody vidUrl = createPartFromString(params[1]);
+                    RequestBody thumbUrl = createPartFromString(params[2]);
+                    map.put("uid", uid);
+                    map.put("desc", description);
+                    map.put("vid", vidUrl);
+                    map.put("thumb", thumbUrl);
+                    break;
+            case 4: // delete post
+                RequestBody pidd = createPartFromString(params[1]);
+                RequestBody vidUrld = createPartFromString(params[2]);
+                RequestBody thumbUrld = createPartFromString(params[3]);
+                map.put("pid", pidd);
+                map.put("vid", vidUrld);
+                map.put("pic", thumbUrld);
+
+                break;
+
+                default:
+                    // not enough params
+                    return;
+
+        }
+        Call<ResultObject> serverCom;
+        // Call restApi
+        if(params.length == 4){
+            serverCom = dIn.deleteItem(map);
+        }
+        else {
+            serverCom = vInterface.sendRequest(map);
+        }
+
+
+        serverCom.enqueue(new Callback<ResultObject>() {
+            @Override
+            public void onResponse(@NonNull Call<ResultObject> call, @NonNull Response<ResultObject> response) {
+                if(response.isSuccessful()){
+                    ResultObject result = response.body();
+                    Log.i(TAG, " message from server - "+ Objects.requireNonNull(result).getSuccess());
+                    Toast.makeText(getContext(),"הפעולה בוצעה בהצלחה", Toast.LENGTH_LONG).show();
+                    mFeedViewModel.refresh();
+                    initContainer();
+                }
+
+
+            }
+            @Override
+            public void onFailure(@NonNull Call<ResultObject> call, @NonNull Throwable t) {
+                Log.e(TAG,"Error in callback" + t.getMessage());
+            }
+        });
+    }
 }

@@ -2,7 +2,9 @@ package com.earwormfix.earwormfix.Models;
 
 import com.google.gson.annotations.SerializedName;
 
-/**A comment can have only one feed relation*/
+/**
+ * Comment POJO
+ * */
 
 public class Comment {
     @SerializedName("pid")

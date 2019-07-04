@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,15 +12,13 @@ import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.earwormfix.earwormfix.R;
-import com.earwormfix.earwormfix.Rest.AddPostIntentService;
+import com.earwormfix.earwormfix.service.AddPostIntentService;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
@@ -123,27 +120,15 @@ public class AddPost extends AppCompatActivity {
                              * pathToStoredVideo - is path to video we want to upload i.e input
                              * selectedVideoPath - is path to the compressed video i.e output
                              */
-                            // test if the queue works!!!!!!!!!!!
+                            selectedVideoPath = getFileDestinationPath();
                             String[] array = {pathToStoredVideo, selectedVideoPath, mSaySomething.getText().toString(), generatedFilename};
                             ArrayList<String> arrayList = new ArrayList<>(Arrays.asList(array));
 
-                            selectedVideoPath = getFileDestinationPath();
+
                             Intent compressIntent = new Intent(AddPost.this, AddPostIntentService.class);
                             compressIntent.setAction(AddPostIntentService.COMPRESS);
-                            /*compressIntent.putExtra("path_to_vid", pathToStoredVideo);
-                            compressIntent.putExtra("path_to_destination", selectedVideoPath);
-                            compressIntent.putExtra("mSaySomething", mSaySomething.getText().toString());
-                            compressIntent.putExtra("generatedFilename", generatedFilename);*/
                             compressIntent.putStringArrayListExtra("params",arrayList);
                             startService(compressIntent);
-                            Intent upIntent = new Intent(AddPost.this, AddPostIntentService.class);
-                            upIntent.setAction(AddPostIntentService.UPLOAD_FILE);
-                            upIntent.putStringArrayListExtra("params",arrayList);
-                            startService(upIntent);
-                            Intent intent = new Intent(AddPost.this, AddPostIntentService.class);
-                            intent.setAction(AddPostIntentService.COMPRESS);
-                            intent.putStringArrayListExtra("params",arrayList);
-                            startService(intent);
                             finish();
 
                         }
@@ -207,12 +192,11 @@ public class AddPost extends AppCompatActivity {
     private void initializePlayer() {
         displayRecordedVideo = ExoPlayerFactory.newSimpleInstance(this,
                         new DefaultTrackSelector());
-
         playerView.setPlayer(displayRecordedVideo);
 
         displayRecordedVideo.setPlayWhenReady(false);
         displayRecordedVideo.seekTo(0, 0);
-        //start();
+        start();
     }
     private MediaSource buildMediaSource(Uri uri) {
         return new ExtractorMediaSource.Factory(
@@ -223,7 +207,7 @@ public class AddPost extends AppCompatActivity {
         MediaSource mediaSource = buildMediaSource(uri);
         displayRecordedVideo.prepare(mediaSource, true, false);
         displayRecordedVideo.setVolume(0f);
-        displayRecordedVideo.setPlayWhenReady(true);
+        displayRecordedVideo.setPlayWhenReady(false);
     }
 
     public void stop(){
@@ -241,24 +225,6 @@ public class AddPost extends AppCompatActivity {
         }
 
     }
-    ///????????????????????????????????????????????????????////
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        if(uri!=null)
-            stop();
-            //initializePlayer();
-        // Checks the orientation of the screen
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) playerView.getLayoutParams();
-            params.width= ViewGroup.LayoutParams.MATCH_PARENT;
-            params.height= ViewGroup.LayoutParams.MATCH_PARENT;
-            playerView.setLayoutParams(params);
-            aspectRatioFrameLayout.setAspectRatio(18f/9f);
 
-        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
-           // do something
-        }
-    }
 
 }

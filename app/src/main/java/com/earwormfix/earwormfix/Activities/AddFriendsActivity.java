@@ -1,7 +1,6 @@
 package com.earwormfix.earwormfix.Activities;
 
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -14,10 +13,10 @@ import android.widget.Toast;
 
 import com.earwormfix.earwormfix.Adapters.AddFriendAdapter;
 import com.earwormfix.earwormfix.Models.Connectivity;
+import com.earwormfix.earwormfix.Models.ResultObject;
 import com.earwormfix.earwormfix.R;
 import com.earwormfix.earwormfix.Rest.GetProfilesApi;
 import com.earwormfix.earwormfix.Rest.RestApi;
-import com.earwormfix.earwormfix.Rest.ResultObject;
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
 import com.earwormfix.earwormfix.helpers.SQLiteHandler;
 
@@ -44,16 +43,12 @@ public class AddFriendsActivity extends AppCompatActivity implements ItemClickLi
     private static ArrayList<Connectivity> connectivityArrayList;
     private HashMap<String, String> user;
     private ItemClickListener mListener;
-    private int orientation;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_friends);
         rv = (RecyclerView)findViewById(R.id.rv_connect);
-        // is this really needed?
-        orientation =getRequestedOrientation();
         layoutManager = new LinearLayoutManager(this);
         connectivityArrayList = new ArrayList<>();// empty list on create
         mAdapter = new AddFriendAdapter(connectivityArrayList, getApplicationContext());
@@ -76,10 +71,6 @@ public class AddFriendsActivity extends AppCompatActivity implements ItemClickLi
                 finish();
             }
         });
-
-
-
-
     }
 
     private void searchFriends(){
@@ -91,8 +82,7 @@ public class AddFriendsActivity extends AppCompatActivity implements ItemClickLi
 
         // Call GetProfilesApi
         Call<List<Connectivity>> serverCom = vInterface.searchProfiles(user.get("uid"));
-        // Needed?
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+
         // retrofit callback
         serverCom.enqueue(new Callback<List<Connectivity>>() {
             @Override
@@ -111,7 +101,6 @@ public class AddFriendsActivity extends AppCompatActivity implements ItemClickLi
                             rv.setLayoutManager(layoutManager);
                             rv.setAdapter(mAdapter);
                             mAdapter.setClickListener(mListener);
-                            setRequestedOrientation(orientation);
                             Log.i(TAG,"List of profiles fetched");
                         }
 
@@ -133,18 +122,18 @@ public class AddFriendsActivity extends AppCompatActivity implements ItemClickLi
     }
     // Listener for adding selected from list
     @Override
-    public void onCommentClick(View view, int position) {
+    public void onCommentClick(View view, int position) { }
+    @Override
+    public void onFixClick(View view, int position) { }
+    @Override
+    public void onItemClick(View view, int position) {
         // add friend in data base
         String uid = connectivityArrayList.get(position).getUid();
         addFriend(uid);
     }
     @Override
-    public void onFixClick(View view, int position) {
-        //
-    }
-    @Override
-    public void onSubmitEdit(View view, int position) {
-        //
+    public void onDeleteClick(View view, int position){
+
     }
     @Override
     public void onBackPressed(){

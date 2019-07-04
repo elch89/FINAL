@@ -7,32 +7,27 @@ import android.util.Log;
  * We store a boolean flag isLoggedIn in shared preferences to check the login status*/
 
 public class SessionManager {
-    // LogCat tag
-    private static String TAG = SessionManager.class.getSimpleName();
 
-    // Shared Preferences
-    SharedPreferences pref;
-
-    SharedPreferences.Editor editor;
-    Context _context;
-
+    private SharedPreferences.Editor editor;
+    private SharedPreferences pref;
     // Shared pref mode
-    int PRIVATE_MODE = 0;
+
 
     // Shared preferences file name
     private static final String PREF_NAME = "EarwormFixLogin";
-
-    private static final String KEY_IS_LOGGEDIN = "isLoggedIn";
+    private static final String KEY_IS_LOGGED_IN = "isLoggedIn";
+    private static final int PRIVATE_MODE = 0;
+    private static final String TAG = SessionManager.class.getSimpleName();
 
     public SessionManager(Context context) {
-        this._context = context;
-        pref = _context.getSharedPreferences(PREF_NAME, PRIVATE_MODE);
+        pref = context.getSharedPreferences(PREF_NAME, PRIVATE_MODE);
         editor = pref.edit();
+        editor.apply();
     }
 
     public void setLogin(boolean isLoggedIn) {
 
-        editor.putBoolean(KEY_IS_LOGGEDIN, isLoggedIn);
+        editor.putBoolean(KEY_IS_LOGGED_IN, isLoggedIn);
 
         // commit changes
         editor.commit();
@@ -41,6 +36,6 @@ public class SessionManager {
     }
 
     public boolean isLoggedIn(){
-        return pref.getBoolean(KEY_IS_LOGGEDIN, false);
+        return pref.getBoolean(KEY_IS_LOGGED_IN, false);
     }
 }

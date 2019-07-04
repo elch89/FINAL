@@ -17,14 +17,11 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     // All Static variables
     // Database Version
-    private static final int DATABASE_VERSION = 4;
-
+    private static final int DATABASE_VERSION = 5;
     // Database Name
     private static final String DATABASE_NAME = "android_api";
-
     // Login table name
     private static final String TABLE_USER = "user";
-
 
     // Login Table Columns names
     private static final String KEY_ID = "id";
@@ -43,16 +40,15 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }//change version to 1 after clearing cache----DATABASE_VERSION
 
-    // Creating Tables
     @Override
     public void onCreate(SQLiteDatabase db) {
+        // create the table
         String CREATE_LOGIN_TABLE = "CREATE TABLE " + TABLE_USER + "("
                 + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + KEY_UID + " TEXT,"
-                + KEY_NAME + " TEXT," + KEY_EMAIL + " TEXT UNIQUE," + KEY_FULL_NAME + " TEXT,"
+                + KEY_NAME + " TEXT," + KEY_EMAIL + " TEXT," + KEY_FULL_NAME + " TEXT,"
                 + KEY_PHONE + " TEXT," + KEY_GENDER + " TEXT,"+ KEY_BIRTH + " TEXT,"+ KEY_GENRE
                 + " TEXT,"+ KEY_PHOTO + " TEXT," + KEY_CREATED_AT + " TEXT" + ")";
         db.execSQL(CREATE_LOGIN_TABLE);
-
         Log.d(TAG, "Database table created");
     }
 
@@ -61,7 +57,6 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // Drop older table if existed
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_USER);
-
         // Create tables again
         onCreate(db);
     }
@@ -89,7 +84,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         long id = db.insert(TABLE_USER, null, values);
         db.close(); // Closing database connection
 
-        Log.d(TAG, "New user inserted into sqlite: " + id+" ----> ");
+        Log.i(TAG, "New user inserted in SQLite, id= "+id);
     }
 
     /**
@@ -118,14 +113,14 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         cursor.close();
         db.close();
         // return user
-        Log.d(TAG, "Fetching user from Sqlite: " + user.toString());
+        Log.d(TAG, "Fetching user from SQLite: " + user.toString());
 
         return user;
     }
 
 
     /**
-     * Re crate database Delete all tables and create them again
+     * Recreate database - Delete all tables and create them again
      * */
     public void deleteUsers() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -133,11 +128,11 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         db.delete(TABLE_USER, null, null);
         db.close();
 
-        Log.d(TAG, "Deleted all user info from sqlite");
+        Log.i(TAG, "Deleted all user info from SQLite");
     }
 
 
-    public void updateProfile(String col, String email, String param, String updated_at){
+    public void updateProfile(String col, String email, String param){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(col,param);
@@ -145,7 +140,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         // Updating Row
         db.update(TABLE_USER,  values, "email=?",arg);
         db.close(); // Closing database connection
-        Log.d(TAG, "Updated user profile info from sqlite");
+        Log.i(TAG, "Updated user profile info from SQLite");
 
 
     }

@@ -12,8 +12,6 @@ import com.earwormfix.earwormfix.Models.Comment;
 import com.earwormfix.earwormfix.Models.Post;
 import com.earwormfix.earwormfix.R;
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
-import com.earwormfix.earwormfix.Utilitties.NetworkState;
-import com.earwormfix.earwormfix.Views.FeedsViewHolder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,16 +31,12 @@ import im.ene.toro.widget.Container;
 public class FeedAdapter extends PagedListAdapter<Post, FeedsViewHolder> implements PlayerSelector, CacheManager {
 
     private ItemClickListener clickListener;
-    private NetworkState networkState;
-    //private List<Post> mFeeds; // Cached copy of feeds
-    //private List<Comment> mComments; // Cached copy of comments
     private LayoutInflater inflater;
     private Context context;
 
 
     public FeedAdapter(PlayerSelector origin,Context context) {
         super(Post.CALLBACK);
-
         this.origin = ToroUtil.checkNotNull(origin);
         this.context = context;
     }
@@ -65,6 +59,7 @@ public class FeedAdapter extends PagedListAdapter<Post, FeedsViewHolder> impleme
         Post current = getItem(position);
         if(current!=null){
             if(Objects.requireNonNull(current).getComments() != null ){
+                // adds comment associated to post
                 mComments.addAll(Arrays.asList(current.getComments()));
             }
             holder.bind(current);
@@ -128,13 +123,9 @@ public class FeedAdapter extends PagedListAdapter<Post, FeedsViewHolder> impleme
         if(getCurrentList()!=null)
             return getCurrentList().size();
         return 0;
-
     }
-
     public void setClickListener(ItemClickListener itemClickListener) {
         clickListener = itemClickListener;
     }
-
-
 
 }

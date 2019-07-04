@@ -1,7 +1,9 @@
 package com.earwormfix.earwormfix.Models;
 
 import com.google.gson.annotations.SerializedName;
-
+/**
+ * MyFix POJO
+ * */
 public class MyFix {
     @SerializedName("mid")
     private int id;

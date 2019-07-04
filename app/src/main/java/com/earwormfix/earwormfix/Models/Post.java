@@ -4,9 +4,9 @@ import android.support.annotation.NonNull;
 import android.support.v7.util.DiffUtil;
 
 import com.google.gson.annotations.SerializedName;
-
-/** Creates a 'entity' or object description to save in database
- * A feed has many comments relation*/
+/**
+ * Post POJO
+ * */
 public class Post {
     @SerializedName("id")
     private int id;

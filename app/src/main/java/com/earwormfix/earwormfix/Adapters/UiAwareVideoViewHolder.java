@@ -21,7 +21,6 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
-import com.earwormfix.earwormfix.Views.FeedsViewHolder;
 import com.google.android.exoplayer2.ControlDispatcher;
 import com.google.android.exoplayer2.Player;
 
@@ -30,7 +29,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import im.ene.toro.exoplayer.ExoPlayerViewHelper;
 import im.ene.toro.exoplayer.ui.ToroControlView;
 
-//import im.ene.toro.exoplayer.PlayerViewHelper;
 
 /**
  * This ViewHolder extends {@link FeedsViewHolder}, provide the mechanism to effectively play/pause
@@ -45,7 +43,7 @@ class UiAwareVideoViewHolder extends FeedsViewHolder {
 
   @SuppressWarnings("WeakerAccess") final FeedAdapter adapter;
 
-  public UiAwareVideoViewHolder(FeedAdapter adapter, ViewGroup parent, LayoutInflater inflater,
+  UiAwareVideoViewHolder(FeedAdapter adapter, ViewGroup parent, LayoutInflater inflater,
                                 int layoutRes, Context context, ItemClickListener mListener) {
     super(parent, inflater, layoutRes,context,mListener);
     this.adapter = adapter;
@@ -80,22 +78,18 @@ class UiAwareVideoViewHolder extends FeedsViewHolder {
         player.seekTo(windowIndex, positionMs);
         return true;
       }
-
       @Override
       public boolean dispatchSetRepeatMode(Player player, int repeatMode) {
         return false;
       }
-
       @Override
       public boolean dispatchSetShuffleModeEnabled(Player player, boolean shuffleModeEnabled) {
         return false;
       }
-
       @Override
       public boolean dispatchStop(Player player, boolean reset) {
         return false;
       }
-
     });
   }
 }

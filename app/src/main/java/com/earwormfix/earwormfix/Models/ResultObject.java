@@ -1,7 +1,9 @@
-package com.earwormfix.earwormfix.Rest;
+package com.earwormfix.earwormfix.Models;
 
 import com.google.gson.annotations.SerializedName;
-
+/**
+ * ResultObject POJO for general post calls
+ * */
 public class ResultObject {
     @SerializedName("error")
     private boolean stat;

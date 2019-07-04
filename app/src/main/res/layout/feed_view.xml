@@ -66,7 +66,17 @@
                     android:text="הוסף לרשימת \nההשמעה"
                     android:textSize="10dp" />
             </android.support.v7.widget.CardView>
-
+            <TextView
+                android:id="@+id/removePost"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="end"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="X"
+                android:textColor="@color/design_default_color_primary_dark"
+                android:textStyle="bold" />
         </LinearLayout>
         <com.google.android.exoplayer2.ui.AspectRatioFrameLayout
             android:layout_below="@+id/poster_layout"
@@ -80,12 +90,11 @@
                 android:id="@+id/playerView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:controller_layout_id="@layout/custom_control_view"
                 android:minHeight="200dp"
+                app:controller_layout_id="@layout/custom_control_view"
                 app:fastforward_increment="10000"
                 app:rewind_increment="10000"
-                app:show_timeout="5000"
-                />
+                app:show_timeout="5000" />
             <View
                 android:layout_width="match_parent"
                 android:layout_height="2dp"

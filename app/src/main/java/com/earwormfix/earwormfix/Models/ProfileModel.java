@@ -1,7 +1,9 @@
 package com.earwormfix.earwormfix.Models;
 
 import com.google.gson.annotations.SerializedName;
-
+/**
+ * ProfileModel POJO
+ * */
 public class ProfileModel {
     @SerializedName("name")
     private String name;

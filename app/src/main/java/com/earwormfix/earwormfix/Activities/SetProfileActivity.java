@@ -3,7 +3,6 @@ package com.earwormfix.earwormfix.Activities;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -31,6 +30,7 @@ import com.earwormfix.earwormfix.Models.ProfileModel;
 import com.earwormfix.earwormfix.R;
 import com.earwormfix.earwormfix.Rest.RegisterApi;
 import com.earwormfix.earwormfix.helpers.SQLiteHandler;
+import com.earwormfix.earwormfix.validtion.FormValidator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -56,26 +56,17 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
     private static final int SELECT_IMAGE = 1;
     private static final String SERVER_PATH = "https://earwormfix.com";
     private static final String TAG = SetProfileActivity.class.getSimpleName();
-    private Button submit,upload;
     private ImageView imgAvatar;
     private String pathToImage;
     private Uri uri;
-    //String[] spinnerTitles;
-    //int[] spinnerImages;
-    //Spinner mSpinner;
-    /*private boolean isUserInteracting;*/
-
-    // input selected:
-    private String sAvatar;
-    private int sAvatarImg;
     private EditText mFullName;
     private EditText mEmail;
     private EditText mPhone;
     private RadioGroup mGender;
     private EditText mBirth;
     private EditText mGenre;
+    private RadioButton btnGender;
 
-    private ProgressDialog pDialog;
     private SQLiteHandler db;
     private File imgFile;
 
@@ -83,21 +74,19 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_set_profile);
-        // Init views
-        //mSpinner = findViewById(R.id.spinner_avatar);
         mFullName = findViewById(R.id.full_name_edit);
         mEmail = findViewById(R.id.email_edit);
         mPhone = findViewById(R.id.phone_edit);
         mGender = findViewById(R.id.sex_select);
         mBirth = findViewById(R.id.bday_edit);//picker
         mGenre = findViewById(R.id.ganre_edit);
-        submit = findViewById(R.id.sub_btn);
+        Button submit = findViewById(R.id.sub_btn);
 
-        upload = findViewById(R.id.upload_pic);
+        Button upload = findViewById(R.id.upload_pic);
         imgAvatar = findViewById(R.id.selectedPhoto);
+        // default image
         imgAvatar.setImageResource(R.drawable.avatar_dog);
-        imgAvatar.setTag(R.drawable.avatar_dog);
-        // init dat listener
+        // init date input listener
         mBirth.setInputType(InputType.TYPE_NULL);
         mBirth.setFocusable(false);
         mBirth.setOnClickListener(new View.OnClickListener() {
@@ -124,8 +113,7 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
                 String name = mFullName.getText().toString().trim();
                 String email = mEmail.getText().toString().trim();
                 String phone = mPhone.getText().toString().trim();
-                int sGender = mGender.getCheckedRadioButtonId();
-                RadioButton btnGender = findViewById(sGender);
+                btnGender = (RadioButton)findViewById(mGender.getCheckedRadioButtonId());
                 String gender = btnGender.getText().toString().trim();
                 String birth = mBirth.getText().toString().trim();
                 String genre = mGenre.getText().toString().trim();
@@ -139,32 +127,26 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
                     if( emailFromReg==null
                             || nameFromReg==null || passFromReg==null){
                         Toast.makeText(getApplicationContext(),
-                                "An error has occurred, re-enter details", Toast.LENGTH_LONG)
+                                "An error has occurred, re-enter details at registration screen", Toast.LENGTH_LONG)
                                 .show();
+                        Intent in = new Intent(SetProfileActivity.this,RegisterActivity.class);
+                        startActivity(in);
                         finish();
                     }
-                    if (!name.isEmpty() && !email.isEmpty() && emailFromReg!=null ) {
-                        if(emailFromReg.equals(email)){
-                            int drawable = (Integer) imgAvatar.getTag();
-                            /*if(drawable == R.drawable.avatar_dog){
-                                defaultImage();
-                            }*/
-                            if(pathToImage == null){
-                                defaultImage();
+                    else{
+                        if(validateFields()){
+                            if(emailFromReg.equals(email)){
+                                if(pathToImage == null){
+                                    defaultImage();
+                                }
+                                uploadVideoToServer(name, email,nameFromReg,passFromReg, phone, gender, birth, genre);
                             }
-                            uploadVideoToServer(name, email,nameFromReg,passFromReg, phone, gender, birth, genre);
+                            else{
+                                Toast.makeText(getApplicationContext(),
+                                        "Please enter the correct email from registration screen", Toast.LENGTH_LONG)
+                                        .show();
+                            }
                         }
-                        else{
-                            Toast.makeText(getApplicationContext(),
-                                    "Please enter the correct email !", Toast.LENGTH_LONG)
-                                    .show();
-                        }
-
-                    }
-                    else {
-                        Toast.makeText(getApplicationContext(),
-                                "Please enter your details!", Toast.LENGTH_LONG)
-                                .show();
                     }
                 }
                 else {
@@ -172,34 +154,60 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
                             "An unknown error has occurred", Toast.LENGTH_LONG)
                             .show();
                     // The remaining activity in stack is LoginActivity
+                    // Go back there because there is noting to do - intent malfunctioning
                     finish();
                 }
-
-
             }
         });
-        // Progress dialog
-        pDialog = new ProgressDialog(this);
-        pDialog.setCancelable(false);
 
         // SQLite database handler
         db = new SQLiteHandler(getApplicationContext());
     }
+    /**
+     * Permissions handling
+     * */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, SetProfileActivity.this);
+    }
+    @Override
+    public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
+        if(uri != null){
+            if(EasyPermissions.hasPermissions(SetProfileActivity.this, android.Manifest.permission.READ_EXTERNAL_STORAGE)){
+                pathToImage = getRealPathFromURIPath(uri, SetProfileActivity.this);
+                imageHandler();
+                Log.d(SetProfileActivity.class.getSimpleName(), "Image Path " + pathToImage);
+            }
+        }
+    }
+
+    @Override
+    public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
+        Log.e(SetProfileActivity.class.getSimpleName(), "Using default image");
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(resultCode == Activity.RESULT_OK  ){
+
+            if(requestCode == SELECT_IMAGE){
+                uri = data.getData();
+                if (EasyPermissions.hasPermissions(SetProfileActivity.this, android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    pathToImage = getRealPathFromURIPath(uri, SetProfileActivity.this);
+                    imageHandler();
+                    Log.d(SetProfileActivity.class.getSimpleName(), "Image Path " + pathToImage);
+                } else {
+                    EasyPermissions.requestPermissions(SetProfileActivity.this, getString(R.string.read_file), READ_REQUEST_CODE, Manifest.permission.READ_EXTERNAL_STORAGE);
+                }
+            }
+        }
+    }
+
 
     /**
-     * Function to store user in MySQL database will post params to register url
+     * Date picker configurations
      * */
-
-    private void showDialog() {
-        if (!pDialog.isShowing())
-            pDialog.show();
-    }
-
-    private void hideDialog() {
-        if (pDialog.isShowing())
-            pDialog.dismiss();
-    }
-
     @Override
     public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
         Calendar c = Calendar.getInstance();
@@ -223,7 +231,7 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
         int dd = c.get(Calendar.DAY_OF_MONTH);
         int mm = c.get(Calendar.MONTH);
         int yy = c.get(Calendar.YEAR);
-        picker.init(yy,mm,dd,this);//last parameter is datechangelistener
+        picker.init(yy,mm,dd,this);
         dtPickerDlg.show();
         dtPickerDlg.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
@@ -233,48 +241,10 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
         });
 
     }
-    // upload images methods
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, SetProfileActivity.this);
-    }
-    @Override
-    public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
-        if(uri != null){
-            if(EasyPermissions.hasPermissions(SetProfileActivity.this, android.Manifest.permission.READ_EXTERNAL_STORAGE)){
 
-                pathToImage = getRealPathFromURIPath(uri, SetProfileActivity.this);
-                dataHandler();
-                Log.d(SetProfileActivity.class.getSimpleName(), "Image Path " + pathToImage);
-            }
-        }
-    }
-
-    @Override
-    public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
-
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(resultCode == Activity.RESULT_OK  ){
-
-            if(requestCode == SELECT_IMAGE){
-                uri = data.getData();
-                if (EasyPermissions.hasPermissions(SetProfileActivity.this, android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
-
-
-                    pathToImage = getRealPathFromURIPath(uri, SetProfileActivity.this);
-                    dataHandler();
-
-                    Log.d(SetProfileActivity.class.getSimpleName(), "Image Path " + pathToImage);
-                } else {
-                    EasyPermissions.requestPermissions(SetProfileActivity.this, getString(R.string.read_file), READ_REQUEST_CODE, Manifest.permission.READ_EXTERNAL_STORAGE);
-                }
-            }
-        }
-    }
+    /**
+     * Provide path to photo on phone
+     * */
     private String getRealPathFromURIPath(Uri contentURI, Activity activity) {
         Cursor cursor = activity.getContentResolver().query(contentURI, null, null, null, null);
         if (cursor == null) {
@@ -287,7 +257,9 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
             return path;
         }
     }
-
+    /**
+     * Send retrofit call to server
+     * */
     @NonNull
     private RequestBody createPartFromString(String descriptionString) {
         return RequestBody.create(
@@ -328,8 +300,6 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
         map.put("birth", rBirth);
         map.put("genre", rGenre);
 
-        pDialog.setMessage("Registering ...");
-        showDialog();
 
         Call<ProfileModel> serverCom = vInterface.upload(iFile, map);
         serverCom.enqueue(new Callback<ProfileModel>() {
@@ -357,23 +327,15 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
                             db.addUser(uid, mName, email, full_name, phone, gender, birth, genre, photo, created_at);
 
                             Toast.makeText(getApplicationContext(), "User successfully registered. Try login now!", Toast.LENGTH_LONG).show();
-
-                                // Launch login activity - Only if register successful
-                            Intent intent = new Intent(
-                                        SetProfileActivity.this,
-                                        LoginActivity.class);
-                            hideDialog();
-                            startActivity(intent);
                             finish();
                         }
-
                         else {
                         // Error occurred in registration.
-                            Log.e(TAG, "Error message " + result.getErrMsg());
+                            Log.e(TAG, "Error in web service - message " + result.getErrMsg());
                             String errorMsg = result.getErrMsg();
                             Toast.makeText(getApplicationContext(),
                                     errorMsg, Toast.LENGTH_LONG).show();
-                            hideDialog();
+
                         }
                     }
                 }
@@ -381,18 +343,22 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
             }
             @Override
             public void onFailure(@NonNull Call<ProfileModel> call, @NonNull Throwable t) {
-                Log.e(TAG, "Error message " + t.getMessage());
+                Log.e(TAG, "Error in call- message " + t.getMessage());
                 Toast.makeText(getApplicationContext(),
                         t.getMessage(), Toast.LENGTH_LONG).show();
-                hideDialog();
             }
         });
     }
+    /**
+     * Actions on image for cropping
+     * */
     public static Bitmap loadBitmapFromFile(String filePath) {
+        // gets the bitmap of image
         return BitmapFactory.decodeFile(filePath);
     }
 
     private Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
+        // resize bitmap
         int width = bm.getWidth();
         int height = bm.getHeight();
         float scaleWidth = ((float) newWidth) / width;
@@ -425,11 +391,11 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
         } catch (IOException e) {
             e.printStackTrace();
         }
-//Convert bitmap to byte array
+        //Convert bitmap to byte array
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, quality /*ignored for PNG*/, bos);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, bos);
         byte[] bitmapdata = bos.toByteArray();
-//write the bytes in file
+        //write the bytes in file
         FileOutputStream fos;
         try {
             fos = new FileOutputStream(imgFile);
@@ -442,19 +408,48 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
             e.printStackTrace();
         }
     }
-
-    private void dataHandler(){
-        Bitmap bmp =getResizedBitmap(Objects.requireNonNull(loadBitmapFromFile(new File(pathToImage).getPath())),70,90);
+    // set imageView to selected photo
+    private void imageHandler(){
+        Bitmap bmp = getResizedBitmap(Objects.requireNonNull(loadBitmapFromFile(new File(pathToImage).getPath())),70,90);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bmp.compress(Bitmap.CompressFormat.JPEG, 0, stream);
         imgAvatar.setImageBitmap(bmp);
         bitmapToFile(bmp);
     }
+    // sets bitmap file to a de
     private void defaultImage(){
         Bitmap bmp = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.avatar_dog);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bmp.compress(Bitmap.CompressFormat.JPEG, 0, stream);
         bitmapToFile(bmp);
+    }
+    /**
+     * validate form
+     * */
+    private boolean validateFields(){
+        FormValidator ins = FormValidator.getInstance();
+        if(ins.isEmpty(mBirth) || ins.isEmpty(mEmail) || ins.isEmpty(mFullName)
+                || ins.isEmpty(mGenre)|| ins.isEmpty(mPhone) || !btnGender.isChecked()){
+            Toast.makeText(getApplicationContext(),
+                    "Please enter your details! missing fields", Toast.LENGTH_LONG)
+                    .show();
+            return false;
+
+        }
+        else {
+            if(!ins.isValidPhone(mPhone.getText().toString().trim())){
+                mPhone.setError("Invalid phone number");
+                return false;
+            }
+            return true;
+        }
+
+    }
+    @Override
+    public void onBackPressed(){
+        super.onBackPressed();
+        Intent in  = new Intent(SetProfileActivity.this,RegisterActivity.class);
+        startActivity(in);
     }
 }
 

@@ -1,6 +1,5 @@
 package com.earwormfix.earwormfix.Activities;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -23,6 +22,7 @@ import com.earwormfix.earwormfix.AppController;
 import com.earwormfix.earwormfix.R;
 import com.earwormfix.earwormfix.helpers.SQLiteHandler;
 import com.earwormfix.earwormfix.helpers.SessionManager;
+import com.earwormfix.earwormfix.validtion.FormValidator;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,12 +30,14 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.earwormfix.earwormfix.validtion.FormValidator.getInstance;
+
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
     public static String PACKAGE_NAME;
     private static final String TAG = LoginActivity.class.getSimpleName();
+    private static final int PERMISSION_ALL = 2;
     private EditText inputEmail;
     private EditText inputPassword;
-    private ProgressDialog pDialog;
     private String email;
     private String password;
     private SessionManager session;
@@ -45,21 +47,18 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         PACKAGE_NAME = getApplicationContext().getPackageName();
-        /**/
         /*initialise views*/
         TextView regScreen = (TextView) findViewById(R.id.link_to_register);
         Button login = (Button) findViewById(R.id.btnLogin);
+        // instance for validating form fields
+        validator = getInstance();
 
-        inputEmail = findViewById(R.id.email);
-        inputPassword = findViewById(R.id.password);
+        inputEmail = (EditText) findViewById(R.id.email);
+        inputPassword = (EditText)findViewById(R.id.password);
 
         // set listeners for register redirect and feeds redirect
         regScreen.setOnClickListener(this);
         login.setOnClickListener(this);
-
-        // Progress dialog initialise
-        pDialog = new ProgressDialog(this);
-        pDialog.setCancelable(false);
 
         // SQLite database handler
         db = new SQLiteHandler(getApplicationContext());
@@ -82,11 +81,15 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             email = inputEmail.getText().toString().trim();
             password = inputPassword.getText().toString().trim();
             validateFields();
-
             // Check for empty data in the form
-            if (!email.isEmpty() && !password.isEmpty()) {
-                // login user
-                int PERMISSION_ALL = 1;
+            if(validator.isEmpty(inputEmail) || validator.isEmpty(inputPassword)){
+                // Prompt user to enter credentials
+                Toast.makeText(getApplicationContext(),
+                        "Please enter the credentials!", Toast.LENGTH_LONG)
+                        .show();
+            }
+            else {
+                // check permissions
                 String[] PERMISSIONS = {
                         android.Manifest.permission.READ_EXTERNAL_STORAGE,
                         android.Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -97,14 +100,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 }
                 else {
                     // Permission has already been granted
-                    checkLogin(email, password);
+                    validateFields();
                 }
 
-            } else {
-                // Prompt user to enter credentials
-                Toast.makeText(getApplicationContext(),
-                        "Please enter the credentials!", Toast.LENGTH_LONG)
-                        .show();
             }
         }
         if(v.getId() == R.id.link_to_register) {
@@ -125,8 +123,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         // Tag used to cancel the request
         String tag_string_req = "req_login";
 
-        pDialog.setMessage("Logging in ...");
-        showDialog();
 
         StringRequest strReq = new StringRequest(Request.Method.POST,
                 AppConfig.URL_LOGIN, new Response.Listener<String>() {
@@ -134,7 +130,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             @Override
             public void onResponse(String response) {
                 Log.d(TAG, "Login Response: " + response.toString());
-                hideDialog();
 
                 try {
                     JSONObject jObj = new JSONObject(response);
@@ -193,7 +188,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_LONG).show();
                 }
 
-                hideDialog();
             }
         }) {
 
@@ -208,28 +202,18 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             }
 
         };
-
         // Adding request to request queue
         AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
     }
 
-    private void showDialog() {
-        if (!pDialog.isShowing())
-            pDialog.show();
-    }
-
-    private void hideDialog() {
-        if (pDialog.isShowing())
-            pDialog.dismiss();
-    }
     public void onRequestPermissionsResult(int requestCode,
                                            String[] permissions, int[] grantResults) {
-        if (requestCode ==1 ) {
+        if (requestCode ==PERMISSION_ALL ) {
 
                 // If request is cancelled, the result arrays are empty.
             if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                checkLogin(email, password);
+                validateFields();
             }
             else {
                 Toast.makeText(this,"יש לאשר גישה לקבצים פנימיים",Toast.LENGTH_LONG).show();
@@ -246,8 +230,26 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }
         return true;
     }
-
+    private static FormValidator validator;
     private void validateFields(){
 
+        if(validator.isEmail(inputEmail) && validator.isPassword(inputPassword)) {
+            if(validator.isValidPassword(password)){
+                checkLogin(email, password);
+            }
+            else{
+                inputPassword.setError("Password is invalid");
+            }
+        }
+        else {
+            if(!validator.isEmail(inputEmail)) {
+                inputEmail.setError("Please enter a valid email address");
+            }
+            if(!validator.isPassword(inputPassword)){
+                inputPassword.setError("Password should be 5-11 characters");
+            }
+        }
     }
+
 }
+

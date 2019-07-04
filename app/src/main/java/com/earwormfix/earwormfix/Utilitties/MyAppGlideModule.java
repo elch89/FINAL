@@ -1,4 +1,4 @@
-package com.earwormfix.earwormfix;
+package com.earwormfix.earwormfix.Utilitties;
 
 import com.bumptech.glide.annotation.GlideModule;
 import com.bumptech.glide.module.AppGlideModule;

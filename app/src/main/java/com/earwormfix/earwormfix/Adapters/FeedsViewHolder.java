@@ -1,5 +1,6 @@
-package com.earwormfix.earwormfix.Views;
+package com.earwormfix.earwormfix.Adapters;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -10,9 +11,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.earwormfix.earwormfix.GlideApp;
 import com.earwormfix.earwormfix.Models.Post;
 import com.earwormfix.earwormfix.R;
+import com.earwormfix.earwormfix.Utilitties.GlideApp;
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
@@ -32,65 +33,50 @@ import im.ene.toro.widget.Container;
 //@SuppressWarnings("WeakerAccess")
 public class FeedsViewHolder extends RecyclerView.ViewHolder implements ToroPlayer, View.OnClickListener {
     private static final String FIXED_ICON = "Fixed";
-
     protected final PlayerView playerView;
     private ItemClickListener clickListener;
     protected ExoPlayerViewHelper helper;
     private Uri videoUri;
     private TextView pDate,userId, desc;
     private ImageView userAvatar;
-    private AspectRatioFrameLayout aspectRatioFrameLayout;
     private Context context;
-
-    /////
+    private ImageView volumeOn, volumeOff;
     public RecyclerView comments;
-    private TextView btnComment ,mFixed, addToList;
+    private TextView mFixed;
+
     public FeedsViewHolder(ViewGroup parent, LayoutInflater inflater, int layoutRes,Context context, ItemClickListener mListener) {
         super(inflater.inflate(layoutRes, parent, false));
         clickListener = mListener;
         this.context=context;
-        aspectRatioFrameLayout = itemView.findViewById(R.id.videoView);
+        AspectRatioFrameLayout aspectRatioFrameLayout = itemView.findViewById(R.id.videoView);
         playerView = itemView.findViewById(R.id.playerView);
         pDate = itemView.findViewById(R.id.post_date);
         desc = itemView.findViewById(R.id.describe_vid);
         userId = itemView.findViewById(R.id.user_id);
         comments = itemView.findViewById(R.id.comment_recycler_view);
         userAvatar = itemView.findViewById(R.id.icon_poster);
-        addToList = itemView.findViewById(R.id.add_to_list);
+        TextView addToList = itemView.findViewById(R.id.add_to_list);
         mFixed = itemView.findViewById(R.id.thumbs_up);
-        btnComment =  itemView.findViewById(R.id.cmd_comment);
+        TextView btnComment =  itemView.findViewById(R.id.cmd_comment);
 
         // Volume control mute/un mute
-
-        ImageView volumeOff =itemView.findViewById(R.id.exo_volume_off);
-        ImageView volumeOn = itemView.findViewById(R.id.exo_volume_up);
+        volumeOff =itemView.findViewById(R.id.exo_volume_off);
+        volumeOn = itemView.findViewById(R.id.exo_volume_up);
         volumeOff.setVisibility(View.INVISIBLE);
-        volumeOff.setOnClickListener(v -> {
-            if(helper!=null){
-                helper.setVolume(0f);
-                volumeOn.setVisibility(View.VISIBLE);
-                volumeOff.setVisibility(View.INVISIBLE);
-            }
-        });
+        volumeUp();
+        volumeDown();
 
-        volumeOn.setOnClickListener(v -> {
-            if(helper!=null) {
-                helper.setVolume(0.75f);
-                volumeOn.setVisibility(View.INVISIBLE);
-                volumeOff.setVisibility(View.VISIBLE);
-            }
-        });
-
+        TextView delete = itemView.findViewById(R.id.removePost);
+        delete.setOnClickListener(this);
         addToList.setOnClickListener(this);
         btnComment.setOnClickListener(this);
         mFixed.setOnClickListener(this);
         aspectRatioFrameLayout.setAspectRatio(4f/3f);
-
     }
 
      public void bind(Post item) {
         String baseUrl ="https://earwormfix.com/";
-        String mediaName = baseUrl.concat(item.getUrl());//"https://earwormfix.com/post/123/20190529_130707.mp4";//
+        String mediaName = baseUrl.concat(item.getUrl());
         videoUri = Uri.parse(mediaName);
         pDate.setText(convertStrDate(item.getCreated_at()));
         if(item.getFixed()>0){
@@ -104,13 +90,16 @@ public class FeedsViewHolder extends RecyclerView.ViewHolder implements ToroPlay
             userAvatar.setImageResource(R.drawable.avatar_dog);
         }
         else{
-            GlideApp.with(context).asBitmap().load(baseUrl+item.getProfPic()).into(userAvatar);
+            GlideApp.with(context).asBitmap().load(baseUrl.concat(item.getProfPic())).into(userAvatar);
         }
 
         userId.setText(item.getName());
 
 
     }
+    /**
+     * set up toro player
+     * */
 
     @NonNull @Override public View getPlayerView() {
         return playerView;
@@ -129,34 +118,38 @@ public class FeedsViewHolder extends RecyclerView.ViewHolder implements ToroPlay
         helper.initialize(container, playbackInfo);
     }
 
-    @Override public void play() {
+    @Override
+    public void play() {
         if (helper != null) {
             helper.play();
-            //helper.setVolume(1.0f);// Added by me
-
         }
     }
 
-    @Override public void pause() {
+    @Override
+    public void pause() {
         if (helper != null) helper.pause();
     }
 
-    @Override public boolean isPlaying() {
+    @Override
+    public boolean isPlaying() {
         return helper != null && helper.isPlaying();
     }
 
-    @Override public void release() {
+    @Override
+    public void release() {
         if (helper != null) {
             helper.release();
             helper = null;
         }
     }
 
-    @Override public boolean wantsToPlay() {
+    @Override
+    public boolean wantsToPlay() {
         return ToroUtil.visibleAreaOffset(this, itemView.getParent()) >= 0.65;
     }
 
-    @Override public int getPlayerOrder() {
+    @Override
+    public int getPlayerOrder() {
         return getAdapterPosition();
     }
 
@@ -171,15 +164,21 @@ public class FeedsViewHolder extends RecyclerView.ViewHolder implements ToroPlay
                 clickListener.onFixClick(view,getAdapterPosition());
             }
             else if(view.getId() == R.id.add_to_list){
-                clickListener.onSubmitEdit(view,getAdapterPosition());
+                clickListener.onItemClick(view,getAdapterPosition());
+            }
+            else if(view.getId() == R.id.removePost){
+                clickListener.onDeleteClick(view,getAdapterPosition());
             }
         }
     }
 
     // Changes the format of date from database
     private String convertStrDate(String timeDate){
+        @SuppressLint("SimpleDateFormat")
         DateFormat frmtIn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        @SuppressLint("SimpleDateFormat")
         DateFormat frmtOut = new SimpleDateFormat("dd/MM/yy HH:mm");
+        @SuppressLint("SimpleDateFormat")
         DateFormat frmtEdit = new SimpleDateFormat("HH:mm");
         Calendar now = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jerusalem"));
         Calendar cal = Calendar.getInstance();
@@ -195,6 +194,24 @@ public class FeedsViewHolder extends RecyclerView.ViewHolder implements ToroPlay
             e.printStackTrace();
         }
         return "Not available";
+    }
+    private void volumeUp(){
+        volumeOn.setOnClickListener(v -> {
+            if(helper!=null) {
+                helper.setVolume(0.75f);
+                volumeOn.setVisibility(View.INVISIBLE);
+                volumeOff.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+    private void volumeDown(){
+        volumeOff.setOnClickListener(v -> {
+            if(helper!=null){
+                helper.setVolume(0f);
+                volumeOn.setVisibility(View.VISIBLE);
+                volumeOff.setVisibility(View.INVISIBLE);
+            }
+        });
     }
 
 }

@@ -1,5 +1,7 @@
 package com.earwormfix.earwormfix.Rest;
 
+import com.earwormfix.earwormfix.Models.ResultObject;
+
 import java.util.Map;
 
 import okhttp3.MultipartBody;

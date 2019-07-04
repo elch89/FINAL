@@ -10,20 +10,22 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.earwormfix.earwormfix.GlideApp;
 import com.earwormfix.earwormfix.Models.MyFix;
 import com.earwormfix.earwormfix.R;
+import com.earwormfix.earwormfix.Utilitties.GlideApp;
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
 
 import java.util.List;
 
 public class MyFixAdapter extends RecyclerView.Adapter<MyFixAdapter.ViewHolder> {
-    private List<MyFix> mData;
+    private static final String URL = "https://www.earwormfix.com/";
+    private static final String MY_FIX = "  that's my fix";
+    private List<MyFix> myFixList;
     private Context context;
-    private ItemClickListener mclickListener;
+    private ItemClickListener mClickListener;
 
     public MyFixAdapter(List<MyFix> mData, Context context){
-        this.mData = mData;
+        this.myFixList = mData;
         this.context =context;
     }
     @NonNull
@@ -33,17 +35,17 @@ public class MyFixAdapter extends RecyclerView.Adapter<MyFixAdapter.ViewHolder> 
         View rootView = LayoutInflater
                 .from(parent.getContext())
                 .inflate(R.layout.my_list_view, parent, false);
-        return new ViewHolder(rootView,mclickListener);
+        return new ViewHolder(rootView,mClickListener);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        if(mData != null){
-            String songDescription = String.valueOf(mData.get(position).getId()).concat(".  ").concat(mData.get(position).getSongName());
+        if(myFixList != null){
+            String songDescription = String.valueOf(myFixList.get(position).getId()).concat(". ").concat(myFixList.get(position).getSongName()+MY_FIX);
             holder.name.setText(songDescription);
+            // adds a thumbnail for selected video
             GlideApp.with(context)
-                    .load("https://www.earwormfix.com/"+mData.get(position).getImgUrl())
-                    //.override(300, 200)
+                    .load(URL.concat(myFixList.get(position).getImgUrl()))
                     .into(holder.snap);
         }
 
@@ -51,17 +53,17 @@ public class MyFixAdapter extends RecyclerView.Adapter<MyFixAdapter.ViewHolder> 
 
     @Override
     public int getItemCount() {
-        if(mData != null)
-            return mData.size();
+        if(myFixList != null)
+            return myFixList.size();
         return 0;
     }
     public void setClickListener(ItemClickListener itemClickListener) {
-        mclickListener = itemClickListener;
+        mClickListener = itemClickListener;
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
-        public TextView songnum, name;
-        public ImageView snap;
+        private TextView name;
+        private ImageView snap;
         CardView layout;
         private ItemClickListener clickListener;
 
@@ -71,20 +73,17 @@ public class MyFixAdapter extends RecyclerView.Adapter<MyFixAdapter.ViewHolder> 
             name = itemView.findViewById(R.id.song_name);
             snap = itemView.findViewById(R.id.imageView);
             layout = itemView.findViewById(R.id.single_track);
-            /*songnum.setOnClickListener(this);
-            name.setOnClickListener(this);*/
+            // sets selected view as a click listener, for choosing from where to play
             layout.setOnClickListener(this);
-
 
         }
         @Override
         public void onClick(View view) {
             if (clickListener != null){
                 if(view.getId() == R.id.single_track){
-                    clickListener.onSubmitEdit(view,getAdapterPosition());
+                    clickListener.onItemClick(view,getAdapterPosition());
                 }
             }
-
         }
     }
 

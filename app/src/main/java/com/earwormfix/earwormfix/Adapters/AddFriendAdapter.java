@@ -11,9 +11,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.earwormfix.earwormfix.GlideApp;
 import com.earwormfix.earwormfix.Models.Connectivity;
 import com.earwormfix.earwormfix.R;
+import com.earwormfix.earwormfix.Utilitties.GlideApp;
 import com.earwormfix.earwormfix.Utilitties.ItemClickListener;
 
 import java.util.ArrayList;
@@ -67,7 +67,7 @@ public class AddFriendAdapter extends RecyclerView.Adapter<AddFriendAdapter.View
         private TextView mName,mNick,mEmail;
         private Button mAdd;
         private ImageView userAvatar;
-        ItemClickListener clickListener;
+        private ItemClickListener clickListener;
 
         private ViewHolder(View itemView, ItemClickListener mListener){
             super(itemView);
@@ -84,7 +84,7 @@ public class AddFriendAdapter extends RecyclerView.Adapter<AddFriendAdapter.View
         public void onClick(View v) {
             if (clickListener != null){
                 if(v.getId() == R.id.add_friend){
-                    clickListener.onCommentClick(v, getAdapterPosition());
+                    clickListener.onItemClick(v, getAdapterPosition());
                 }
             }
         }

@@ -12,7 +12,6 @@ import retrofit2.http.Query;
 
 public interface FetchFeedApi {
 
-        //https://earwormfix.com/stream.php?id=0&&user=5cfa83882a9316.76570365
         @GET("stream.php")
         Call<List<Post>> fetchPosts(@Query("page") int page, @Query("page_size") int pageSize, @Query("user") String userId);
 

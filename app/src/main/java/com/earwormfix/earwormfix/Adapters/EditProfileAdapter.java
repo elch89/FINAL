@@ -45,12 +45,12 @@ public class EditProfileAdapter extends RecyclerView.Adapter<EditProfileAdapter.
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
-        public TextView mTV;
-        public TextView mCurr;
-        public Button btnEdit;
+        TextView mTV;
+        TextView mCurr;
+        Button btnEdit;
         ItemClickListener clickListener;
 
-        public ViewHolder(View itemView, ItemClickListener mListener){
+        ViewHolder(View itemView, ItemClickListener mListener){
             super(itemView);
             clickListener = mListener;
             mTV = itemView.findViewById(R.id.profile_att_name);
@@ -63,7 +63,7 @@ public class EditProfileAdapter extends RecyclerView.Adapter<EditProfileAdapter.
         public void onClick(View v) {
             if (clickListener != null){
                 if(v.getId() == R.id.profile_edit){
-                    clickListener.onSubmitEdit(v, getAdapterPosition());
+                    clickListener.onItemClick(v, getAdapterPosition());
                 }
             }
 

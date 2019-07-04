@@ -9,9 +9,9 @@ import retrofit2.Call;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PartMap;
-// for general post request, changing value in data base, no need for callback values
-public interface RestApi {
+
+public interface DeleteApi {
     @Multipart
-    @POST("feedback.php")
-    Call<ResultObject> sendRequest(@PartMap() Map<String, RequestBody> partMap);
+    @POST("delete.php")
+    Call<ResultObject> deleteItem(@PartMap() Map<String, RequestBody> partMap);
 }

@@ -35,7 +35,7 @@
                     android:layout_width="fill_parent"
                     android:fontFamily="@font/averia_serif_libre_bold_italic"
                     android:layout_height="wrap_content"
-                    android:text="User Name"
+                    android:text="User Display Name"
                     android:textColor="#372c24" />
                 <EditText android:id="@+id/reg_fullname"
                     android:layout_width="match_parent"

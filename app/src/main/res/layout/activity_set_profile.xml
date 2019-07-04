@@ -33,13 +33,13 @@
                     android:orientation="horizontal">
                     <Button
                         android:id="@+id/upload_pic"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:background="@color/lightBlue"
+                        android:backgroundTint="@color/design_default_color_primary"
                         android:gravity="center"
                         android:text="@string/upload_pic"
-                        android:textColor="@color/design_default_color_primary_dark" />
+                        android:textColor="@color/PrimaryOrange" />
                     <TextView
                         android:fontFamily="@font/averia_serif_libre_bold_italic"
                         android:layout_width="wrap_content"
@@ -124,14 +124,15 @@
 
                 <RadioGroup
                     android:id="@+id/sex_select"
-                    android:layout_width="352dp"
-                    android:layout_height="41dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginBottom="10dp"
                     android:orientation="horizontal">
 
                     <RadioButton
                         android:id="@+id/fem_select"
-                        android:layout_width="134dp"
+                        android:layout_width="match_parent"
+                        android:layout_weight="1"
                         android:layout_height="wrap_content"
                         android:text="Female" />
 
@@ -139,6 +140,7 @@
                         android:id="@+id/male_select"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="Male" />
                 </RadioGroup>
 

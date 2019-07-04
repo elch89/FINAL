@@ -1,4 +1,6 @@
-package com.earwormfix.earwormfix.Rest;
+package com.earwormfix.earwormfix.factory;
+
+import com.earwormfix.earwormfix.Rest.FetchFeedApi;
 
 import java.util.concurrent.TimeUnit;
 
@@ -9,7 +11,7 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class FetchFeedApiFactory {
-    private static String BASE_URL = "https://earwormfix.com";
+    private static final String BASE_URL = "https://earwormfix.com";
 
     public static FetchFeedApi create() {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();

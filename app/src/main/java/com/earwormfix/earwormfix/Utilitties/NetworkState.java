@@ -1,5 +1,5 @@
 package com.earwormfix.earwormfix.Utilitties;
-
+/**this class is a model for deciding network call status - posted in dataSource*/
 public class NetworkState {
     public enum Status{
         RUNNING,

@@ -14,9 +14,10 @@
     <string name="ok">OK</string>
     <string name="cancel">CANCEL</string>
     <string name="dialog_message">Are you sure you want to post this fix?</string>
+    <string name="dialog_delete">Are you sure you want to delete user?</string>
     <string name="dialog_title">Confirmation</string>
     <string name="friendsAlready">friends</string>
-    <string name="upload_pic">Upload picture</string>
+    <string name="upload_pic">Upload profile \n picture</string>
     <string name="back_to_feed">back to feed</string>
 
     <!--<div>Icons made by <a href="https://www.flaticon.com/authors/gregor-cresnar" title="Gregor Cresnar">Gregor Cresnar</a> from <a href="https://www.flaticon.com/" 		    title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" 		    title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>

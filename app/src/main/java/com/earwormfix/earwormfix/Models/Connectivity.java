@@ -1,9 +1,10 @@
 package com.earwormfix.earwormfix.Models;
 
 import com.google.gson.annotations.SerializedName;
-
+/**
+ * Connectivity POJO
+ * */
 public class Connectivity {
-    // uid,name,full_name,email
     @SerializedName("uid")
     private String uid;
     @SerializedName("name")

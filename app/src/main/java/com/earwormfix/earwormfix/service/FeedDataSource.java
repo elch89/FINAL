@@ -1,4 +1,4 @@
-package com.earwormfix.earwormfix;
+package com.earwormfix.earwormfix.service;
 
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.paging.PageKeyedDataSource;
@@ -7,7 +7,7 @@ import android.util.Log;
 
 import com.earwormfix.earwormfix.Models.Post;
 import com.earwormfix.earwormfix.Rest.FetchFeedApi;
-import com.earwormfix.earwormfix.Rest.FetchFeedApiFactory;
+import com.earwormfix.earwormfix.factory.FetchFeedApiFactory;
 import com.earwormfix.earwormfix.Utilitties.NetworkState;
 import com.earwormfix.earwormfix.helpers.SQLiteHandler;
 
@@ -23,6 +23,8 @@ import static com.earwormfix.earwormfix.AppController.getAppContext;
  * A data source for pages content - Retrofit calls are instantiated to get information from server.
  * extends from PageKeyedDataSource :
  * Incremental data loader for page-keyed content, where requests return keys for next/previous pages.
+ *
+ * is kind of a service, because preforms calls in background
  * */
 public class FeedDataSource extends PageKeyedDataSource<Integer, Post> {
     private static final String TAG = FeedDataSource.class.getSimpleName();

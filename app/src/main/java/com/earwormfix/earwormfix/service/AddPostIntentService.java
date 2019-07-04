@@ -1,4 +1,4 @@
-package com.earwormfix.earwormfix.Rest;
+package com.earwormfix.earwormfix.service;
 
 import android.app.Activity;
 import android.app.IntentService;
@@ -23,6 +23,9 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.earwormfix.earwormfix.Activities.FeedsActivity;
+import com.earwormfix.earwormfix.Models.ResultObject;
+import com.earwormfix.earwormfix.Rest.VideoUploadApi;
+import com.earwormfix.earwormfix.factory.VideoUploadFactory;
 import com.earwormfix.earwormfix.helpers.SQLiteHandler;
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
@@ -58,8 +61,6 @@ import static com.earwormfix.earwormfix.AppConfig.CHANNEL_ID;
  * */
 public class AddPostIntentService extends IntentService {
     public static final String COMPRESS = "compress";
-    public static final String UPLOAD_FILE = "upload";
-    public static final String SEND_DATA = "send";
 
     private static final String TAG = AddPostIntentService.class.getSimpleName();
     private static final String APP_NAME = "EarwormFix";
@@ -79,14 +80,14 @@ public class AddPostIntentService extends IntentService {
         super(name);
         // Set service to redeliver its process if in any case phone
         // shutdown and application get started
-        setIntentRedelivery(true);
+        setIntentRedelivery(false);
     }
     @Override
     public void onCreate() {
+        super.onCreate();
         String notiContent = "מעלה את הסרטון\n פעולה זו יכולה לקחת זמן";
         sendNotificationIntent(notiContent);
-        // initialize compression library
-        initFfmpeg();
+
         db = new SQLiteHandler(this);
     }
 
@@ -97,12 +98,13 @@ public class AddPostIntentService extends IntentService {
         if (SDK_INT > 8)
         {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-                    /*.permitAll()*/
-                    .penaltyLog()
+                    .permitAll()
+                    /*.penaltyLog()*/
                     .build();
             StrictMode.setThreadPolicy(policy);
         }
-
+        // initialize compression library
+        initFfmpeg();
         if(intent != null){
             String action = intent.getAction();
             // get data from AddPost
@@ -113,31 +115,9 @@ public class AddPostIntentService extends IntentService {
             // Start compressing the video file
             if (action != null) {
                 if(action.equals(COMPRESS)){
+
+                    Log.e(TAG,"compressing");
                     executeCompression();
-                }
-                else if(action.equals(UPLOAD_FILE)){
-                    bitmapToFile();
-                    if(imgFile !=null) {
-
-                        // Upload file using ftp(for large files)
-                        HashMap<String, String> user = db.getUserDetails();
-                        String userId = user.get("uid");
-                        AsyncTaskFtp.TaskListener listener = result ->
-                        {
-                            if(!result){
-                                broadcastResult(false);
-                            }
-                        };
-                        AsyncTaskFtp ftpTask = new AsyncTaskFtp(listener);
-                        ftpTask.execute(selectedVideoPath,userId);
-
-                    }
-                    else {
-                        broadcastResult(false);
-                    }
-                }
-                else if(action.equals(SEND_DATA)){
-                    uploadVideoDetailsToServer();
                 }
             }
 
@@ -196,7 +176,7 @@ public class AddPostIntentService extends IntentService {
                     Log.d(TAG, "Success: "+message);
                     // Start a thread to convert bitmap to file
                     // and then send file to server via FTP
-                    /*bitmapToFile();
+                    bitmapToFile();
                     if(imgFile !=null) {
 
                         // Upload file using ftp(for large files)
@@ -204,21 +184,21 @@ public class AddPostIntentService extends IntentService {
                         String userId = user.get("uid");
                         AsyncTaskFtp.TaskListener listener = result ->
                         {
-                            if(result){
+                            if(result ){
                                 // on success of ftp transmit, send other data to server
                                 uploadVideoDetailsToServer();
-                            }
-                            else{
-                                broadcastResult(false);
                             }
                         };
                         AsyncTaskFtp ftpTask = new AsyncTaskFtp(listener);
                         ftpTask.execute(selectedVideoPath,userId);
+                        if(ftpTask.isCancelled()){
+                            broadcastResult(false);
+                        }
 
                     }
                     else {
                         broadcastResult(false);
-                    }*/
+                    }
                 }
                 @Override
                 public void onFinish() {
@@ -250,7 +230,7 @@ public class AddPostIntentService extends IntentService {
 
 
         // get video length
-        String time = "Unavailable";
+        String time;
         try {
             File videoFile = new File(selectedVideoPath);
             MediaMetadataRetriever retriever = new  MediaMetadataRetriever();
@@ -260,6 +240,7 @@ public class AddPostIntentService extends IntentService {
         } catch (Exception e) {
             e.printStackTrace();
             broadcastResult(false);
+            return;
         }
         // Video path on server file system
         String vidFileName = generatedFilename+ ".mp4";
@@ -291,7 +272,10 @@ public class AddPostIntentService extends IntentService {
                             broadcastResult(true);
                         }
                     }
-
+                }
+                else{
+                    Log.e(TAG, "response failed  ");
+                    broadcastResult(true);
                 }
                 Log.i(TAG, "response code " + response.code());
                 // delete compressed video from storage
@@ -334,7 +318,7 @@ public class AddPostIntentService extends IntentService {
         if(thumb!=null){
             resized = getResizedBitmap(thumb,120,100);
         }
-        else {return;}
+        else { return;}
 
         resized.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
         imgFile = new File(setFileDestinationPath());
@@ -354,15 +338,16 @@ public class AddPostIntentService extends IntentService {
             sendNotificationIntent("הסתיימה ההעלאה");
         }
         else {
-            // stop queue?
             sendNotificationIntent("ארעה שגיעה בזמן ההעלאה");
         }
         // Put extras into the intent as usual
         in.putExtra("resultCode", Activity.RESULT_OK);
-        in.putExtra("resultValue",  stat);
+        in.putExtra("resultValue", stat);
+
         // Fire the broadcast with intent packaged
         LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(in);
     }
+
     private boolean deleteTemp(String path){
         File file = new File(path);
         return file.delete();
@@ -394,7 +379,7 @@ public class AddPostIntentService extends IntentService {
             FTPClient client = new FTPClient();
             try {
                 client.connect("ftp.earwormfix.com", 21);
-                client.login("FTPUser", "XXXXX");// remember to remove from git!
+                client.login("XXXX", "XXXXX"); // TODO: change when testing
 
                 client.sendNoOp(); //used so server timeout exception will not rise
                 int reply = client.getReplyCode();
@@ -402,8 +387,7 @@ public class AddPostIntentService extends IntentService {
                     client.disconnect();
                     Log.e(TAG,"FTP server refuse connection Code- "+ reply);
                     this.taskListener.onFinished(false);
-                    return null;
-
+                    cancel(true);
                 }
                 client.enterLocalPassiveMode();//Switch to passive mode
                 client.setFileType(FTP.BINARY_FILE_TYPE, FTP.BINARY_FILE_TYPE);
@@ -415,15 +399,24 @@ public class AddPostIntentService extends IntentService {
                 InputStream inputStream = new FileInputStream(videoFile);
 
                 Log.i(TAG,"storing...");
-
-                if (client.storeFile(remoteFile, inputStream)) {
+                boolean stored = client.storeFile(remoteFile, inputStream);
+                if (stored) {
                     Log.i(TAG,"Done!!!");
+                }
+                else{
+                    Log.e(TAG,"Failed to send ftp "+ reply);
+                    this.taskListener.onFinished(false);
+                    inputStream.close();
+                    client.logout();
+                    cancel(true);
                 }
                 inputStream.close();
                 //logout will close the connection
                 client.logout();
             } catch (IOException e) {
                 e.printStackTrace();
+                this.taskListener.onFinished(false);
+                cancel(true);
             }
             return null;
         }
@@ -468,5 +461,10 @@ public class AddPostIntentService extends IntentService {
         }
         NotificationManager notificationManager = (NotificationManager)this.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(0, n);
+    }
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        Log.i(TAG,"Service destroyed");
     }
 }
