@@ -40,22 +40,23 @@ public class AddFriendsActivity extends AppCompatActivity implements ItemClickLi
     private RecyclerView rv;
     private AddFriendAdapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
-    private static ArrayList<Connectivity> connectivityArrayList;
+    private ArrayList<Connectivity> connectivityArrayList;
     private HashMap<String, String> user;
     private ItemClickListener mListener;
+    private Call<List<Connectivity>> serverCom;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_friends);
         rv = (RecyclerView)findViewById(R.id.rv_connect);
-        layoutManager = new LinearLayoutManager(this);
+        layoutManager = new LinearLayoutManager(getApplicationContext());
         connectivityArrayList = new ArrayList<>();// empty list on create
         mAdapter = new AddFriendAdapter(connectivityArrayList, getApplicationContext());
         rv.setLayoutManager(layoutManager);
         rv.setAdapter(mAdapter);
         mAdapter.setClickListener(this);
-        mListener =this;
+        mListener = this;
         SQLiteHandler db = new SQLiteHandler(getApplicationContext());
         // get user unique id
         user = db.getUserDetails();
@@ -81,7 +82,7 @@ public class AddFriendsActivity extends AppCompatActivity implements ItemClickLi
         GetProfilesApi vInterface = retrofit.create(GetProfilesApi.class);
 
         // Call GetProfilesApi
-        Call<List<Connectivity>> serverCom = vInterface.searchProfiles(user.get("uid"));
+        serverCom = vInterface.searchProfiles(user.get("uid"));
 
         // retrofit callback
         serverCom.enqueue(new Callback<List<Connectivity>>() {
@@ -135,12 +136,7 @@ public class AddFriendsActivity extends AppCompatActivity implements ItemClickLi
     public void onDeleteClick(View view, int position){
 
     }
-    @Override
-    public void onBackPressed(){
-        Intent i = new Intent(AddFriendsActivity.this,FeedsActivity.class);
-        startActivity(i);
-        finish();
-    }
+
 
     @NonNull
     private RequestBody createPartFromString(String descriptionString) {
@@ -193,6 +189,24 @@ public class AddFriendsActivity extends AppCompatActivity implements ItemClickLi
                 Log.e(TAG, "Retrofit call failed- "+t.getMessage());
             }
         });
+    }
+    // handle possible leaks
+    @Override
+    public void onBackPressed(){
+        super.onBackPressed();
+        if(serverCom != null){
+            serverCom.cancel();
+        }
+        Intent i = new Intent(AddFriendsActivity.this,FeedsActivity.class);
+        startActivity(i);
+        finish();
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(serverCom != null){
+            serverCom.cancel();
+        }
     }
 
 }

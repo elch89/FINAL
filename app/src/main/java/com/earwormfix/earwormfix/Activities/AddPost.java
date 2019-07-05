@@ -190,7 +190,7 @@ public class AddPost extends AppCompatActivity {
     }
     // Init media player
     private void initializePlayer() {
-        displayRecordedVideo = ExoPlayerFactory.newSimpleInstance(this,
+        displayRecordedVideo = ExoPlayerFactory.newSimpleInstance(getApplicationContext(),
                         new DefaultTrackSelector());
         playerView.setPlayer(displayRecordedVideo);
 
@@ -200,7 +200,7 @@ public class AddPost extends AppCompatActivity {
     }
     private MediaSource buildMediaSource(Uri uri) {
         return new ExtractorMediaSource.Factory(
-                new DefaultDataSourceFactory(this,"video")).
+                new DefaultDataSourceFactory(getApplicationContext(),"video")).
                 createMediaSource(uri);
     }
     public void start(){

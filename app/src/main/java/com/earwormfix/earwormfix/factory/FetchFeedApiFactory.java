@@ -9,7 +9,9 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
-
+/**
+ * Factory for creating a retrofit instance, and listen to http requests and response
+ **/
 public class FetchFeedApiFactory {
     private static final String BASE_URL = "https://earwormfix.com";
 
@@ -17,7 +19,8 @@ public class FetchFeedApiFactory {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder().connectTimeout(120,TimeUnit.SECONDS).
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder().
+                connectTimeout(120,TimeUnit.SECONDS).
                 writeTimeout(120, TimeUnit.SECONDS).
                 readTimeout(120,TimeUnit.SECONDS);
         httpClient.addInterceptor(logging);

@@ -54,6 +54,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class EditProfileActivity extends AppCompatActivity implements ItemClickListener, DatePicker.OnDateChangedListener, View.OnClickListener {
     private static final String SERVER_PATH = "https://earwormfix.com";
     private static final String TAG = EditProfileActivity.class.getSimpleName();
+    // Tag used to cancel the request
+    private static final String tag_string_req = "req_update";
     private RecyclerView rv;
     private EditText txtEdit;
     private Dialog mDialog;
@@ -63,6 +65,7 @@ public class EditProfileActivity extends AppCompatActivity implements ItemClickL
     private String[] mCurrent;
     private String[] mKeyNames;
     private SessionManager session;
+    private StringRequest strReq;
     // constants for keys
     private static final String KEY_FULL_NAME = "full_name";
     private static final String KEY_PHONE = "phone";
@@ -164,9 +167,8 @@ public class EditProfileActivity extends AppCompatActivity implements ItemClickL
     }
 
     private void updateUserProfile(final String col, final String email, final String param) {
-        // Tag used to cancel the request
-        String tag_string_req = "req_update";
-        StringRequest strReq = new StringRequest(Request.Method.POST,
+
+        strReq = new StringRequest(Request.Method.POST,
                 AppConfig.URL_UPDATE, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -247,13 +249,13 @@ public class EditProfileActivity extends AppCompatActivity implements ItemClickL
         EditProfileAdapter mAdapter = new EditProfileAdapter(mDataset, mCurrent);
         // Update layout for new data
         rv.setAdapter(mAdapter);
-        rv.setLayoutManager(new LinearLayoutManager(this));
+        rv.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         mAdapter.setClickListener(this);
 
     }
 
     private void pickerDialog(){
-        final Dialog dtPickerDlg = new Dialog(this);
+        final Dialog dtPickerDlg = new Dialog(getApplicationContext());
         dtPickerDlg.setContentView(R.layout.picker);
         txtEdit.setInputType(InputType.TYPE_NULL);
         txtEdit.setClickable(true);
@@ -379,5 +381,13 @@ public class EditProfileActivity extends AppCompatActivity implements ItemClickL
         Intent intent = new Intent(EditProfileActivity.this, LoginActivity.class);
         startActivity(intent);
         finish();
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(strReq != null) {
+            AppController.getInstance().cancelPendingRequests(tag_string_req);
+        }
+
     }
 }

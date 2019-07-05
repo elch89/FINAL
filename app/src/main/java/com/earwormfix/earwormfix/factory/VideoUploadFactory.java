@@ -8,7 +8,9 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
-
+/**
+ * Factory for creating a retrofit instance
+ **/
 public class VideoUploadFactory {
 
     private static final String BASE_URL = "https://earwormfix.com";

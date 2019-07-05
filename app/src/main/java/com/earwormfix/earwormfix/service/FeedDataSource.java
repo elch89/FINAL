@@ -28,17 +28,17 @@ import static com.earwormfix.earwormfix.AppController.getAppContext;
  * */
 public class FeedDataSource extends PageKeyedDataSource<Integer, Post> {
     private static final String TAG = FeedDataSource.class.getSimpleName();
-    private SQLiteHandler db;
     private HashMap<String, String> user;
     private FetchFeedApi ffa;
     private MutableLiveData networkState;
     private MutableLiveData initialLoading;
 
     public FeedDataSource(){
-        db = new SQLiteHandler(getAppContext());
+
         networkState = new MutableLiveData();
         initialLoading = new MutableLiveData();
         this.ffa = FetchFeedApiFactory.create();
+        SQLiteHandler db = new SQLiteHandler(getAppContext());
         user = db.getUserDetails();
     }
     // for getting state of network calls
@@ -60,7 +60,7 @@ public class FeedDataSource extends PageKeyedDataSource<Integer, Post> {
         // Start call
         data.enqueue(new Callback<List<Post>>() {
             @Override
-            public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
+            public void onResponse(@NonNull Call<List<Post>> call, @NonNull Response<List<Post>> response) {
                 if(response.isSuccessful()){
                     List<Post> postList = response.body();
                     if(postList !=null ){
@@ -90,7 +90,7 @@ public class FeedDataSource extends PageKeyedDataSource<Integer, Post> {
             }
 
             @Override
-            public void onFailure(Call<List<Post>> call, Throwable t) {
+            public void onFailure(@NonNull Call<List<Post>> call, @NonNull Throwable t) {
                 // call failed
                 Log.e(TAG,t.getMessage()+call.toString());
                 networkState.postValue(new NetworkState(NetworkState.Status.FAILED, t.getMessage()));
@@ -110,7 +110,7 @@ public class FeedDataSource extends PageKeyedDataSource<Integer, Post> {
         Call<List<Post>> data = ffa.fetchPosts( params.key,params.requestedLoadSize,user.get("uid"));
         data.enqueue(new Callback<List<Post>>() {
             @Override
-            public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
+            public void onResponse( @NonNull Call<List<Post>> call, @NonNull Response<List<Post>> response) {
                 if(response.isSuccessful()){
                     List<Post> postList = response.body();
                     if(postList !=null){
@@ -133,7 +133,7 @@ public class FeedDataSource extends PageKeyedDataSource<Integer, Post> {
 
             }
             @Override
-            public void onFailure(Call<List<Post>> call, Throwable t) {
+            public void onFailure(@NonNull Call<List<Post>> call, @NonNull Throwable t) {
                 Log.d(TAG,t.getMessage());
                 networkState.postValue(new NetworkState(NetworkState.Status.FAILED, t.getMessage()));
             }

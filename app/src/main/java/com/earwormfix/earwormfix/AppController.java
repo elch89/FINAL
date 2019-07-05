@@ -17,12 +17,10 @@ public class AppController extends Application {
     private RequestQueue mRequestQueue;
 
     private static AppController mInstance;
-    private static Context context;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        AppController.context = getApplicationContext();
         mInstance = this;
     }
 
@@ -57,8 +55,8 @@ public class AppController extends Application {
         return (AppController) context.getApplicationContext();
     }
     // get application Context for using in classes where context cannot be fetched
-    public static Context getAppContext() {
-        return AppController.context;
+    public static AppController getAppContext() {
+        return mInstance;
     }
     // create an appController based on given app context
     public static AppController create(Context context) {

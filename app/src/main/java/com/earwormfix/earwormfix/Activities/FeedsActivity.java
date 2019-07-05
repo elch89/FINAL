@@ -205,7 +205,7 @@ public class FeedsActivity extends AppCompatActivity {
         }
         if(item.getItemId() == R.id.addFix) {
             // add a post activity
-            Intent intent = new Intent(this, AddPost.class);
+            Intent intent = new Intent(FeedsActivity.this, AddPost.class);
             startActivity(intent);
             return true;
         }

@@ -66,9 +66,9 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
     private static final String SERVER_PATH = "https://earwormfix.com";
     private static final String TAG = FeedFragment.class.getSimpleName();
     private Container container;
+    private Call<ResultObject> serverCom;;
     private FeedAdapter adapter;
     private RecyclerView.LayoutManager layoutManager;
-    private SQLiteHandler db;
     private SharedViewModel model;
     private String selectedPost;
     private LinearLayout err;
@@ -92,7 +92,7 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
         adapter = new FeedAdapter(PlayerSelector.DEFAULT ,getActivity());
         container.setPlayerSelector(adapter);
         container.setCacheManager(adapter);
-        db = new SQLiteHandler(getActivity());
+        SQLiteHandler db = new SQLiteHandler(getActivity());
         container.setLayoutManager(layoutManager);
         user = db.getUserDetails();
         container.setPlayerDispatcher(__ -> 500); // The playback will be delayed 500ms.
@@ -135,7 +135,7 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
     @Override
     public void onPause() {
         super.onPause();
-        // Unregister the listener when the application is paused
+        // Unregister the listener when the application is paused prevent leaks
         LocalBroadcastManager.getInstance(Objects.requireNonNull(getActivity())).unregisterReceiver(testReceiver);
     }
     /**Define the callback for what to do when data is received*/
@@ -347,7 +347,6 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
                     return;
 
         }
-        Call<ResultObject> serverCom;
         // Call restApi
         if(params.length == 4){
             serverCom = dIn.deleteItem(map);
@@ -375,5 +374,12 @@ public class FeedFragment extends Fragment  implements ItemClickListener {
                 Log.e(TAG,"Error in callback" + t.getMessage());
             }
         });
+    }
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if(serverCom != null){
+            serverCom.cancel();
+        }
     }
 }

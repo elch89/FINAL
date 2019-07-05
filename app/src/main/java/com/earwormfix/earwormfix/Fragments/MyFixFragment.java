@@ -49,7 +49,7 @@ public class MyFixFragment extends Fragment implements ItemClickListener {
     private static final String TAG = MyFixFragment.class.getSimpleName();
     private static final String URL = "https://www.earwormfix.com/";
     private RecyclerView rv;
-
+    private Call<List<MyFix>> data;
     private RecyclerView.LayoutManager layoutManager;
     private List<MyFix> myFixList;
     private ItemClickListener mListener;
@@ -101,6 +101,9 @@ public class MyFixFragment extends Fragment implements ItemClickListener {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if(data != null){
+            data.cancel();
+        }
         if(player != null){
             stop();
             release();
@@ -165,7 +168,7 @@ public class MyFixFragment extends Fragment implements ItemClickListener {
         db = new SQLiteHandler(getAppContext());
         HashMap<String, String> user = db.getUserDetails();
         FetchFeedApi ffa= FetchFeedApiFactory.create();
-        Call<List<MyFix>> data = ffa.getMyPlaylist(user.get("uid"));
+        data = ffa.getMyPlaylist(user.get("uid"));
         data.enqueue(new Callback<List<MyFix>>() {
             @Override
             public void onResponse(@NonNull Call<List<MyFix>> call, @NonNull Response<List<MyFix>> response) {

@@ -43,7 +43,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -147,12 +150,15 @@ public class AddPostIntentService extends IntentService {
     private void executeCompression(){
         Log.i(TAG,"PATH to video is "+pathToStoredVideo);
         Log.i(TAG,"Destination PATH is "+selectedVideoPath);
-        String command = "-n -i "+pathToStoredVideo+
-                " -s 480x320 -r 24 -c:v libx264 -preset ultrafast -c:a copy -me_method zero " +
-                "-tune fastdecode -tune zerolatency -strict -2 -b:v 1000k -pix_fmt yuv420p " +
-                selectedVideoPath;
-
-        String[] args = command.split(" ");
+        String begin="-n -i ";
+        List<String> beginArgs = new ArrayList<>(Arrays.asList(begin.split(" ")));
+        String middle ="-s 480x320 -r 24 -c:v libx264 -preset ultrafast -c:a copy -me_method zero " +
+                "-tune fastdecode -tune zerolatency -strict -2 -b:v 1000k -pix_fmt yuv420p ";
+        List<String> middleArgs = new ArrayList<>(Arrays.asList(middle.split(" ")));
+        beginArgs.add(pathToStoredVideo);
+        beginArgs.addAll(middleArgs);
+        beginArgs.add(selectedVideoPath);
+        String[] args = beginArgs.toArray(new String[0]);  //command.split(" ");
         for (int i= 0;i<args.length;i++){
             Log.i("CMD","args["+i+"]: "+args[i]);
         }
@@ -359,7 +365,6 @@ public class AddPostIntentService extends IntentService {
         return filePathEnvironment+ "/earwormfix/" + generatedFilename + EXTENSION_JPG;
     }
 
-
     private static class AsyncTaskFtp extends AsyncTask<String, String, Void> {
         // string[0] ---> selectedVideoPath
         // strings[1] ---> userId
@@ -379,7 +384,7 @@ public class AddPostIntentService extends IntentService {
             FTPClient client = new FTPClient();
             try {
                 client.connect("ftp.earwormfix.com", 21);
-                client.login("XXXX", "XXXXX"); // TODO: change when testing
+                client.login("XXXX", "XXXXX"); // TODO: change when testing- leave no whitespace!!
 
                 client.sendNoOp(); //used so server timeout exception will not rise
                 int reply = client.getReplyCode();
@@ -444,7 +449,6 @@ public class AddPostIntentService extends IntentService {
                     .setContentIntent(pIntent)
                     .setAutoCancel(true)
                     .setChannelId(CHANNEL_ID)
-                    /*.setWhen(System.currentTimeMillis())*/
                     .build();
         }
         else{
@@ -456,7 +460,6 @@ public class AddPostIntentService extends IntentService {
                     .setContentIntent(pIntent)
                     .setAutoCancel(true)
                     .setPriority(Notification.PRIORITY_DEFAULT)
-                    /*.setWhen(System.currentTimeMillis())*/
                     .build();
         }
         NotificationManager notificationManager = (NotificationManager)this.getSystemService(Context.NOTIFICATION_SERVICE);

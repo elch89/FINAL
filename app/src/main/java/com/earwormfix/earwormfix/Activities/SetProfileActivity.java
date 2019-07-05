@@ -66,6 +66,7 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
     private EditText mBirth;
     private EditText mGenre;
     private RadioButton btnGender;
+    private Call<ProfileModel> serverCom;
 
     private SQLiteHandler db;
     private File imgFile;
@@ -139,7 +140,7 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
                                 if(pathToImage == null){
                                     defaultImage();
                                 }
-                                uploadVideoToServer(name, email,nameFromReg,passFromReg, phone, gender, birth, genre);
+                                uploadProfileToServer(name, email,nameFromReg,passFromReg, phone, gender, birth, genre);
                             }
                             else{
                                 Toast.makeText(getApplicationContext(),
@@ -216,7 +217,7 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
         mBirth.setText(inp);
     }
     private void pickerDialog(){
-        final Dialog dtPickerDlg = new Dialog(this);
+        final Dialog dtPickerDlg = new Dialog(getApplicationContext());
         dtPickerDlg.setContentView(R.layout.picker);
         final DatePicker picker =(DatePicker) dtPickerDlg.findViewById(R.id.datePicker);
         Button btnOk =(Button) dtPickerDlg.findViewById(R.id.okbutton);
@@ -266,7 +267,7 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
                 okhttp3.MultipartBody.FORM, descriptionString);
     }
 
-    private void uploadVideoToServer(final String name, final String email, final String fullName,
+    private void uploadProfileToServer(final String name, final String email, final String fullName,
                                      final String password,
                                      final String phone, final String gender, final String birth,
                                      final String genre){
@@ -301,7 +302,8 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
         map.put("genre", rGenre);
 
 
-        Call<ProfileModel> serverCom = vInterface.upload(iFile, map);
+        serverCom = vInterface.upload(iFile, map);
+
         serverCom.enqueue(new Callback<ProfileModel>() {
             @Override
             public void onResponse(@NonNull Call<ProfileModel> call, @NonNull retrofit2.Response<ProfileModel> response) {
@@ -448,8 +450,19 @@ public class SetProfileActivity extends AppCompatActivity implements DatePicker.
     @Override
     public void onBackPressed(){
         super.onBackPressed();
+        if(serverCom != null){
+            serverCom.cancel();
+        }
         Intent in  = new Intent(SetProfileActivity.this,RegisterActivity.class);
         startActivity(in);
+
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(serverCom != null){
+            serverCom.cancel();
+        }
     }
 }
 

@@ -36,16 +36,32 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     public static String PACKAGE_NAME;
     private static final String TAG = LoginActivity.class.getSimpleName();
     private static final int PERMISSION_ALL = 2;
+    // Tag used to cancel the request
+    private static final String tag_string_req = "req_login";
+    private static FormValidator validator;
     private EditText inputEmail;
     private EditText inputPassword;
     private String email;
     private String password;
     private SessionManager session;
     private SQLiteHandler db;
+    private StringRequest strReq;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        // check permissions
+        String[] PERMISSIONS = {
+                android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+        };
+
+        if(!hasPermissions(getApplicationContext(), PERMISSIONS)){
+            ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
+        }
+
         PACKAGE_NAME = getApplicationContext().getPackageName();
         /*initialise views*/
         TextView regScreen = (TextView) findViewById(R.id.link_to_register);
@@ -89,20 +105,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         .show();
             }
             else {
-                // check permissions
-                String[] PERMISSIONS = {
-                        android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-                };
-
-                if(!hasPermissions(this, PERMISSIONS)){
-                    ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
-                }
-                else {
-                    // Permission has already been granted
-                    validateFields();
-                }
-
+                validateFields();
             }
         }
         if(v.getId() == R.id.link_to_register) {
@@ -120,11 +123,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
      * function to verify login details in mysql db
      * */
     private void checkLogin(final String email, final String password) {
-        // Tag used to cancel the request
-        String tag_string_req = "req_login";
 
 
-        StringRequest strReq = new StringRequest(Request.Method.POST,
+
+        strReq = new StringRequest(Request.Method.POST,
                 AppConfig.URL_LOGIN, new Response.Listener<String>() {
 
             @Override
@@ -213,8 +215,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 // If request is cancelled, the result arrays are empty.
             if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                validateFields();
-            }
+                // continue
+        }
             else {
                 Toast.makeText(this,"יש לאשר גישה לקבצים פנימיים",Toast.LENGTH_LONG).show();
             }
@@ -230,16 +232,17 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }
         return true;
     }
-    private static FormValidator validator;
+
     private void validateFields(){
 
         if(validator.isEmail(inputEmail) && validator.isPassword(inputPassword)) {
-            if(validator.isValidPassword(password)){
-                checkLogin(email, password);
-            }
-            else{
+            /*if(validator.isValidPassword(password)){
+
+            }*/
+            checkLogin(email, password);
+            /*else{
                 inputPassword.setError("Password is invalid");
-            }
+            }*/
         }
         else {
             if(!validator.isEmail(inputEmail)) {
@@ -249,6 +252,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 inputPassword.setError("Password should be 5-11 characters");
             }
         }
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(strReq != null) {
+            AppController.getInstance().cancelPendingRequests(tag_string_req);
+        }
+
     }
 
 }

@@ -15,17 +15,6 @@
         android:orientation="horizontal" android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp">
-
-        <!--<TextView
-            android:id="@+id/song_demo"
-            android:layout_width="wrap_content"
-            android:layout_height="?listPreferredItemHeight"
-            android:gravity="center"
-
-
-            android:fontFamily="@font/averia_serif_libre_bold_italic"
-            android:text="Song # N"
-            android:textAppearance="@style/TextAppearance.AppCompat.Button" />-->
         <TextView
             android:id="@+id/song_name"
             android:layout_width="match_parent"
@@ -43,7 +32,6 @@
             android:layout_weight="1"
             app:srcCompat="@drawable/avatar_dog" />
 
-        <!--</LinearLayout>-->
     </LinearLayout>
     <View
         android:layout_width="match_parent"
