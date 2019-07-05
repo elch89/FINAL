@@ -29,4 +29,4 @@ The media content of this app will be music videos, allowing users to:
 [Fix-board](https://github.com/elch89/FINAL/projects/1)
 
 ## Attached apk
-[version 1.0](https://github.com/elch89/FINAL/releases/tag/1.0.0)
+[version 1.4.0](https://github.com/elch89/FINAL/releases/tag/v1.4.0)
