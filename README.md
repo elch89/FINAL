@@ -29,4 +29,19 @@ The media content of this app will be music videos, allowing users to:
 [Fix-board](https://github.com/elch89/FINAL/projects/1)
 
 ## Attached apk
-*[version 1.4.0](https://github.com/elch89/FINAL/releases/tag/v1.4.0)*
+~~version 1.4.0~~ - Not connected to server anymore.
+
+## Final report and presentation
+* [Final report](finalReport.pdf)
+* [Final presentation](finalPresentation.pptx)
+
+## Poster
+![](POSTER.PNG)
+
+## Screenshots
+<p float="left">
+<img src="Screenshots/20190711_011400.png" width="200" height="400" />
+<img src="Screenshots/20190711_011516.png" width="200" height="400" />
+<img src="Screenshots/20190711_011637.png" width="200" height="400" />
+<img src="Screenshots/20190711_011656.png" width="200" height="400" />
+</p>
